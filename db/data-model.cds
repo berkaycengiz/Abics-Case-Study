@@ -1,0 +1,19 @@
+namespace db_schema;
+
+using { cuid, managed, Currency } from '@sap/cds/common';
+
+entity Products: cuid, managed {
+    name: String(100) @mandatory;
+    description: String(250) @mandatory;
+    price: Decimal(15,2) @mandatory @assert.range: [0, null];
+    currency: Currency @mandatory;
+    stocks: Integer @mandatory  @assert.range: [0, null];
+    supplier: Association to Suppliers @mandatory;
+}
+
+entity Suppliers : cuid, managed {
+    name: String(100) @mandatory;
+    address: String(250);
+    phone: String(50);
+    products: Association to many Products on products.supplier = $self;
+}

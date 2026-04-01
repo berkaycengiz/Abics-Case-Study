@@ -1,0 +1,19 @@
+{
+  "generator-ui5-app": {
+    "namespace": "com.abics.casestudy",
+    "framework": "SAPUI5",
+    "frameworkVersion": "1.146.0",
+    "author": "Berkay Cengiz",
+    "initrepo": true,
+    "appId": "com.abics.casestudy",
+    "appURI": "com/abics/casestudy",
+    "cdnDomain": "ui5.sap.com",
+    "defaultTheme": "sap_horizon",
+    "qunitCoverageFile": "qunit-coverage-istanbul.js",
+    "gte1_98_0": true,
+    "gte1_104_0": true,
+    "gte1_120_0": true,
+    "lt1_124_0": false,
+    "setupCompleted": true
+  }
+}
