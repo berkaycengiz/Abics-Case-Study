@@ -46,7 +46,8 @@
 			"minUI5Version": "1.146.0",
 			"libs": {
 				"sap.ui.core": {},
-				"sap.m": {}
+				"sap.m": {},
+				"sap.tnt": {}
 			}
 		},
 
@@ -84,19 +85,38 @@
 				"viewType": "XML",
 				"viewPath": "com.abics.casestudy.view",
 				"controlId": "app",
-				"controlAggregation": "pages"
+				"controlAggregation": "pages",
+				"async": true
 			},
 			"routes": [
 				{
+					"name": "home",
 					"pattern": "",
-					"name": "main",
-					"target": "main"
+					"target": "TargetHome"
+				},
+				{
+					"name": "products",
+					"pattern": "products",
+					"target": "TargetProducts"
+				},
+				{
+					"name": "suppliers",
+					"pattern": "suppliers",
+					"target": "TargetSuppliers"
 				}
 			],
 			"targets": {
-				"main": {
-					"viewId": "main",
-					"viewName": "Main"
+				"TargetHome": {
+					"viewName": "Home",
+					"viewLevel": 1
+				},
+				"TargetProducts": {
+					"viewName": "Products",
+					"viewLevel": 2
+				},
+				"TargetSuppliers": {
+					"viewName": "Suppliers",
+					"viewLevel": 2
 				}
 			}
 		}

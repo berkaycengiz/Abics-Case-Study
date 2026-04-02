@@ -1,0 +1,39 @@
+<mvc:View controllerName="com.abics.casestudy.controller.Home"
+    xmlns:mvc="sap.ui.core.mvc" displayBlock="true"
+    xmlns="sap.m" xmlns:layout="sap.ui.layout">
+    
+    <Page title="Ana Sayfa Özeti" showHeader="false">
+        <content>
+            <layout:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
+                
+                <Panel headerText="Son Ürünler" expanded="true">
+                    <List items="{/Products}">
+                        <ObjectListItem 
+                            title="{name}" 
+                            number="{price}"
+                            type="Active"
+                            press=".onNavigateToProducts">
+                            <attributes>
+                                <ObjectAttribute text="Açıklama: {description}" />
+                            </attributes>
+                        </ObjectListItem>
+                    </List>
+                </Panel>
+
+                <Panel headerText="Tedarikçiler" expanded="true">
+                    <List items="{/Suppliers}">
+                        <ObjectListItem 
+                            title="{name}" 
+                            type="Active"
+                            press=".onNavigateToSuppliers">
+                            <attributes>
+                                <ObjectAttribute text="{phone}" /> 
+                            </attributes>
+                        </ObjectListItem>
+                    </List>
+                </Panel>
+
+            </layout:Grid>
+        </content>
+    </Page>
+</mvc:View>
