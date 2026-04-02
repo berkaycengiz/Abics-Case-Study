@@ -1,9 +1,33 @@
 <mvc:View
-	controllerName="com.abics.casestudy.controller.App"
-	displayBlock="true"
-	xmlns="sap.m"
-	xmlns:mvc="sap.ui.core.mvc">
+    controllerName="com.abics.casestudy.controller.App"
+    displayBlock="true"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:tnt="sap.tnt"> <tnt:ToolPage id="toolPage" sideExpanded="true">
+        
+        <tnt:header>
+            <tnt:ToolHeader>
+                <Button icon="sap-icon://menu2" type="Transparent" press=".onSideNavButtonPress" />
+                <Title text="Products and Suppliers Management" />
+            </tnt:ToolHeader>
+        </tnt:header>
+        
+        <tnt:sideContent>
+            <tnt:SideNavigation selectedKey="home">
+                <tnt:item>
+                    <tnt:NavigationList>
+                        <tnt:NavigationListItem text="Home" icon="sap-icon://home" key="home" select=".onNavItemSelect" />
+                        <tnt:NavigationListItem text="Products" icon="sap-icon://product" key="products" select=".onNavItemSelect" />
+                        <tnt:NavigationListItem text="Suppliers" icon="sap-icon://supplier" key="suppliers" select=".onNavItemSelect" />
+                    </tnt:NavigationList>
+                </tnt:item>
+            </tnt:SideNavigation>
+        </tnt:sideContent>
 
-	<App id="app" />
+        <tnt:mainContents>
+            <App id="app" />
+        </tnt:mainContents>
+        
+    </tnt:ToolPage>
 
 </mvc:View>
