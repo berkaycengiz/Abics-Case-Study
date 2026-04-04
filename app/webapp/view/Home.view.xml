@@ -6,31 +6,57 @@
         <content>
             <layout:Grid defaultSpan="L6 M12 S12" class="sapUiSmallMargin">
                 
-                <Panel headerText="Son Ürünler" expanded="true">
-                    <List items="{/Products}">
+                <Panel headerText="Son Eklenen Ürünler" expanded="true" class="sapUiTinyMarginBottom">
+                    <List id="latestProductsList" items="{path: '/Products', length: 3, parameters: { $orderby: 'createdAt desc', $expand: 'supplier' }}" noDataText="Ürün bulunamadı...">
                         <ObjectListItem 
                             title="{name}" 
-                            number="{price}"
-                            type="Active"
+                            number="{
+                                    parts: [
+                                        {path: 'price'}, 
+                                        {path: 'currency_code'}
+                                    ],
+                                    type: 'sap.ui.model.type.Currency',
+                                    formatOptions: {
+                                        showMeasure: false 
+                                    }
+                                }"
+                            numberUnit="{currency_code}"
+                            type="Navigation" 
                             press=".onNavigateToProducts">
                             <attributes>
                                 <ObjectAttribute text="Açıklama: {description}" />
+                                <ObjectAttribute text="Eklenme: {
+                                    path: 'createdAt',
+                                    type: 'sap.ui.model.type.Date',
+                                    formatOptions: {
+                                        source: {
+                                            pattern: 'yyyy-MM-ddTHH:mm:ss.SSSX'
+                                        },
+                                        style: 'medium',
+                                        relative: true
+                                    }
+                                }" />
+                                <ObjectAttribute text="Supplier: {supplier/name}"></ObjectAttribute>
                             </attributes>
                         </ObjectListItem>
                     </List>
+                    <Button text="Tüm Ürünleri Gör" press=".onNavigateToProducts" width="100%" type="Transparent"/>
                 </Panel>
 
-                <Panel headerText="Tedarikçiler" expanded="true">
-                    <List items="{/Suppliers}">
+                <Panel headerText="Son Eklenen Tedarikçiler" expanded="true">
+                    <List id="latestSuppliersList" items="{path: '/Suppliers', length: 3, parameters: { $orderby: 'createdAt desc', $expand: 'country' }}" noDataText="Tedarikçi bulunamadı.">
                         <ObjectListItem 
                             title="{name}" 
-                            type="Active"
+                            intro="{city}, {country/name}"
+                            type="Navigation" 
                             press=".onNavigateToSuppliers">
                             <attributes>
-                                <ObjectAttribute text="{phone}" /> 
+                                <ObjectAttribute text="Tel: {phone}" /> 
+                                <ObjectAttribute text="Email: {email}" /> 
                             </attributes>
                         </ObjectListItem>
                     </List>
+                    <Button text="Tüm Tedarikçileri Gör" press=".onNavigateToSuppliers" width="100%" type="Transparent"/>
                 </Panel>
 
             </layout:Grid>

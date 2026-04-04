@@ -10,7 +10,7 @@
           "instance": "main-db-hdi",
           "key": "main-db-hdi-key"
         },
-        "kind": "hana-cloud",
+        "kind": "hana",
         "vcap": {
           "name": "db"
         }

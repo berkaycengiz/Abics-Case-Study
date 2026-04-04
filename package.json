@@ -29,10 +29,14 @@
 		"eslint": "^9.36.0",
 		"eslint-plugin-jsdoc": "^60.3.1",
 		"globals": "^16.4.0",
+		"randexp": "^0.5.3",
 		"rimraf": "^6.0.1",
 		"start-server-and-test": "^2.1.2",
 		"ui5-middleware-livereload": "^3.1.4",
 		"ui5-test-runner": "^5.9.1",
 		"wdio-ui5-service": "^3.0.8"
+	},
+	"dependencies": {
+		"@sap/cds-common-content": "^3.1.0"
 	}
 }
