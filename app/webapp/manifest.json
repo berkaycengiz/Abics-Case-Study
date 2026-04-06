@@ -47,7 +47,9 @@
 			"libs": {
 				"sap.ui.core": {},
 				"sap.m": {},
-				"sap.tnt": {}
+				"sap.tnt": {},
+				"sap.f": {},
+    			"sap.ui.layout": {}
 			}
 		},
 
@@ -63,7 +65,7 @@
 				"type": "sap.ui.model.resource.ResourceModel",
 				"settings": {
 					"bundleName": "com.abics.casestudy.i18n.i18n",
-					"supportedLocales": ["en", "de"],
+					"supportedLocales": ["en", "de", "tr"],
 					"fallbackLocale": "en",
 					"async": true
 				}
@@ -85,7 +87,7 @@
 				"viewType": "XML",
 				"viewPath": "com.abics.casestudy.view",
 				"controlId": "app",
-				"controlAggregation": "pages",
+				"controlAggregation": "beginColumnPages",
 				"async": true
 			},
 			"routes": [
@@ -98,6 +100,11 @@
 					"name": "products",
 					"pattern": "products",
 					"target": "TargetProducts"
+				},
+				{
+					"name": "productDetail",
+					"pattern": "products/{productPath}",
+					"target": "TargetProducts" 
 				},
 				{
 					"name": "suppliers",

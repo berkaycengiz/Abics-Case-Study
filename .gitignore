@@ -4,6 +4,8 @@ coverage
 .nyc_output
 report
 
+db
+
 # Logs
 logs
 *.log
@@ -17,6 +19,21 @@ node_modules/
 .DS_Store
 .env
 tmp/
+
+# added by cds
+.cdsrc-private.json
+gen/
+# added by cds
+.cdsrc-private.json
+
+# added by cds
+.cdsrc-private.json
+
+# added by cds
+.cdsrc-private.json
+
+# added by cds
+.cdsrc-private.json
 
 # added by cds
 .cdsrc-private.json

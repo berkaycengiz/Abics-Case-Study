@@ -47,7 +47,7 @@
                     <List id="latestSuppliersList" items="{path: '/Suppliers', length: 3, parameters: { $orderby: 'createdAt desc', $expand: 'country' }}" noDataText="Tedarikçi bulunamadı.">
                         <ObjectListItem 
                             title="{name}" 
-                            intro="{city}, {country/name}"
+                            intro="{city}, {country_code}"
                             type="Navigation" 
                             press=".onNavigateToSuppliers">
                             <attributes>

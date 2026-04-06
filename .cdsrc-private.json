@@ -7,8 +7,8 @@
           "apiEndpoint": "https://api.cf.ap21.hana.ondemand.com",
           "org": "c1e93b83trial",
           "space": "dev",
-          "instance": "main-db-hdi",
-          "key": "main-db-hdi-key"
+          "instance": "main-hdi-db",
+          "key": "main-hdi-db-key"
         },
         "kind": "hana",
         "vcap": {

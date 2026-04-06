@@ -3,9 +3,10 @@
     displayBlock="true"
     xmlns="sap.m"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns:tnt="sap.tnt"> 
-	
-	<tnt:ToolPage id="toolPage" sideExpanded="true">
+    xmlns:tnt="sap.tnt"
+    xmlns:f="sap.f"> 
+    
+    <tnt:ToolPage id="toolPage" sideExpanded="true">
         
         <tnt:header>
             <tnt:ToolHeader>
@@ -27,7 +28,7 @@
         </tnt:sideContent>
 
         <tnt:mainContents>
-            <App id="app" />
+            <f:FlexibleColumnLayout id="app" backgroundDesign="Translucent" />
         </tnt:mainContents>
         
     </tnt:ToolPage>

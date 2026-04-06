@@ -1,0 +1,29 @@
+<mvc:View
+    controllerName="app.controller.Products"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:tnt="sap.tnt"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table"
+    displayBlock="true">
+
+    <f:FlexibleColumnLayout id="fcl" layout="{ui>/layout}">
+
+        <!-- ═══════════════════════════════════════
+             MASTER COLUMN — Products Table
+        ════════════════════════════════════════ -->
+        <f:beginColumnPages>
+            <mvc:XMLView viewName="app.view.ProductsMaster" id="masterView"/>
+        </f:beginColumnPages>
+
+        <!-- ═══════════════════════════════════════
+             DETAIL COLUMN — Product Detail
+        ════════════════════════════════════════ -->
+        <f:midColumnPages>
+            <mvc:XMLView viewName="app.view.ProductsDetail" id="detailView"/>
+        </f:midColumnPages>
+
+    </f:FlexibleColumnLayout>
+
+</mvc:View>
