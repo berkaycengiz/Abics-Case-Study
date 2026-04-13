@@ -1,5 +1,5 @@
 <mvc:View
-    controllerName="app.controller.Products"
+    controllerName="com.abics.casestudy.controller.Products"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:f="sap.f"
@@ -10,18 +10,12 @@
 
     <f:FlexibleColumnLayout id="fcl" layout="{ui>/layout}">
 
-        <!-- ═══════════════════════════════════════
-             MASTER COLUMN — Products Table
-        ════════════════════════════════════════ -->
         <f:beginColumnPages>
-            <mvc:XMLView viewName="app.view.ProductsMaster" id="masterView"/>
+            <mvc:XMLView viewName="com.abics.casestudy.view.ProductsMaster" id="masterView"/>
         </f:beginColumnPages>
 
-        <!-- ═══════════════════════════════════════
-             DETAIL COLUMN — Product Detail
-        ════════════════════════════════════════ -->
         <f:midColumnPages>
-            <mvc:XMLView viewName="app.view.ProductsDetail" id="detailView"/>
+            <mvc:XMLView viewName="com.abics.casestudy.view.ProductsDetail" id="detailView"/>
         </f:midColumnPages>
 
     </f:FlexibleColumnLayout>

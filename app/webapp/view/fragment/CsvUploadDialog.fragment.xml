@@ -1,0 +1,76 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"> <Dialog
+        id="csvDialog"
+        title="{i18n>csvUpload}"
+        contentWidth="36rem">
+
+        <content>
+            <VBox class="sapUiContentPadding" width="100%">
+
+                <MessageStrip
+                    text="{i18n>csvInstructions}"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiSmallMarginBottom"/>
+
+                <Label text="{i18n>selectFile}" class="sapUiSmallMarginBottom"/>
+                <u:FileUploader
+                    id="csvFileUploader"
+                    fileType="csv"
+                    mimeType="text/csv,application/vnd.ms-excel"
+                    placeholder="{i18n>chooseCsv}"
+                    change=".onCsvFileChange"
+                    width="100%"
+                    class="sapUiSmallMarginBottom"/>
+
+                <Button
+                    id="validateCsvBtn"
+                    text="{i18n>validate}"
+                    icon="sap-icon://accept"
+                    enabled="false"
+                    press=".onValidateCsv"
+                    class="sapUiSmallMarginBottom"/>
+
+                <VBox id="csvValidationResults" visible="false" class="sapUiSmallMarginTop">
+                    <List
+                        headerText="{i18n>validationResults}"
+                        items="{csvResult>/errors}">
+                        <StandardListItem
+                            title="{csvResult>message}"
+                            description="{i18n>row}: {csvResult>row} | {i18n>column}: {csvResult>column}"
+                            type="Inactive"
+                            icon="sap-icon://error"/>
+                    </List>
+                    <MessageStrip
+                        visible="{= ${csvResult>/valid} === true}"
+                        text="{i18n>csvValid}"
+                        type="Success"
+                        showIcon="true"/>
+                    <MessageStrip
+                        visible="{= ${csvResult>/valid} === false}"
+                        text="{i18n>csvInvalid}"
+                        type="Error"
+                        showIcon="true"/>
+                </VBox>
+
+            </VBox>
+        </content>
+
+        <beginButton>
+            <Button
+                id="uploadCsvBtn"
+                text="{i18n>upload}"
+                type="Emphasized"
+                icon="sap-icon://upload"
+                enabled="false"
+                press=".onUploadCsv"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>close}" press=".onCsvDialogClose"/>
+        </endButton>
+
+    </Dialog>
+
+</core:FragmentDefinition>

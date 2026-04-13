@@ -81,13 +81,21 @@
             }
 		},
 
+		"resources": {
+			"css": [
+				{
+					"uri": "style.css"
+				}
+			]
+		},
+
 		"routing": {
 			"config": {
 				"routerClass": "sap.m.routing.Router",
 				"viewType": "XML",
 				"viewPath": "com.abics.casestudy.view",
 				"controlId": "app",
-				"controlAggregation": "beginColumnPages",
+				"controlAggregation": "pages",
 				"async": true
 			},
 			"routes": [
@@ -102,7 +110,7 @@
 					"target": "TargetProducts"
 				},
 				{
-					"name": "productDetail",
+					"name": "productsDetail",
 					"pattern": "products/{productPath}",
 					"target": "TargetProducts" 
 				},

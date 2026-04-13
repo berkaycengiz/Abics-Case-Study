@@ -1,0 +1,88 @@
+<mvc:View
+    controllerName="com.abics.casestudy.controller.Products"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:fi="sap.f.semantic"
+    xmlns:form="sap.ui.layout.form"
+    displayBlock="true">
+
+    <fi:SemanticPage id="detailPage" headerPinnable="false" toggleHeaderOnTitleClick="false">
+
+        <fi:titleHeading>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{name}" level="H2"/>
+                </f:heading>
+                <f:snappedHeading>
+                    <Title text="{name}" level="H3"/>
+                </f:snappedHeading>
+                <f:actions>
+                    <Button
+                        text="{i18n>closeDetail}"
+                        icon="sap-icon://decline"
+                        type="Transparent"
+                        press=".onCloseDetail"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </fi:titleHeading>
+
+        <fi:content>
+            <VBox class="sapUiContentPadding">
+
+                <Panel headerText="{i18n>productInfo}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+                    <content>
+                        <form:SimpleForm
+                            editable="false"
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                            emptySpanXL="0" emptySpanL="0" emptySpanM="0"
+                            columnsXL="2" columnsL="2" columnsM="1">
+
+                            <Label text="{i18n>colName}"/>
+                            <Text text="{name}"/>
+
+                            <Label text="{i18n>colDescription}"/>
+                            <Text text="{description}"/>
+
+                            <Label text="{i18n>colPrice}"/>
+                            <ObjectNumber
+                                number="{price}"
+                                unit="{currency_code}"
+                                state="Information"/>
+
+                            <Label text="{i18n>colStock}"/>
+                            <ObjectStatus
+                                text="{stocks}"
+                                state="{= ${stocks} > 50 ? 'Success' : ${stocks} > 10 ? 'Warning' : 'Error'}"/>
+
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+
+                <Panel headerText="{i18n>supplierInfo}" expandable="true" expanded="true">
+                    <content>
+                        <form:SimpleForm
+                            editable="false"
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12">
+
+                            <Label text="{i18n>colName}"/>
+                            <Text text="{supplier/name}"/>
+
+                            <Label text="{i18n>supplierEmail}"/>
+                            <Link text="{supplier/email}" href="mailto:{supplier/email}"/>
+
+                            <Label text="{i18n>supplierPhone}"/>
+                            <Text text="{supplier/phone}"/>
+
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+
+            </VBox>
+        </fi:content>
+
+    </fi:SemanticPage>
+
+</mvc:View>

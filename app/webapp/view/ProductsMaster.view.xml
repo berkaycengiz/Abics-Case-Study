@@ -1,0 +1,228 @@
+<mvc:View
+    controllerName="com.abics.casestudy.controller.Products"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:data="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+    displayBlock="true">
+
+    <Page
+        id="productsPage"
+        showHeader="true"
+        showFooter="{products>/hasPendingChanges}">
+
+        <customHeader>
+            <Bar>
+                <contentLeft>
+                    <Title text="{i18n>productsTitle} ({= ${products>/count}})" level="H3"/>
+                </contentLeft>
+                <contentRight>
+                    <SearchField
+                        id="searchField"
+                        width="12rem"
+                        placeholder="{i18n>search}"
+                        liveChange=".onSearch"/>
+                    <Button
+                        icon="sap-icon://filter"
+                        type="Transparent"
+                        tooltip="{i18n>filter}"
+                        press=".onOpenFilterDialog"/>
+                    <Button
+                        id="addRowBtn"
+                        text="{i18n>create}"
+                        type="Emphasized"
+                        icon="sap-icon://add"
+                        press=".onAddRow"/>
+                    <Button
+                        id="deleteBtn"
+                        text="{i18n>delete}"
+                        type="Reject"
+                        icon="sap-icon://delete"
+                        enabled="{products>/hasSelection}"
+                        press=".onDeleteSelected"/>
+                    <Button
+                        text="{i18n>csvUpload}"
+                        icon="sap-icon://upload"
+                        press=".onOpenCsvDialog"/>
+                </contentRight>
+            </Bar>
+        </customHeader>
+
+        <content>
+            <OverflowToolbar 
+                id="activeFiltersBar" 
+                visible="{products>/hasActiveFilters}" 
+                class="sapUiSmallPadding">
+                
+                <content>
+                    <Label text="{i18n>activeFilters}:" class="sapUiTinyMarginBegin"/>
+                    <HBox id="filterTokens" gap="0.5rem" wrap="Wrap" alignItems="Center" class="sapUiTinyMarginBegin"/>
+                    <Button
+                        text="{i18n>clearAllFilters}"
+                        type="Emphasized"
+                        press=".onClearAllFilters"
+                        class="sapUiSmallMarginEnd"/>
+                </content>
+            </OverflowToolbar>
+
+            <Table
+                id="productsTable"
+                items="{
+                    path: '/Products',
+                    parameters: {
+                        $$updateGroupId: 'productsGroup',
+                        $orderby: 'createdAt desc',
+                        $expand: 'supplier',
+                        $count: true
+                    },
+                    events: {
+                        dataReceived: '.onDataReceived'
+                    }
+                }"
+                mode="MultiSelect"
+                selectionChange=".onSelectionChange"
+                growing="true"
+                growingThreshold="20"
+                growingScrollToLoad="true"
+                sticky="ColumnHeaders,HeaderToolbar"
+                noDataText="{i18n>noProducts}">
+
+                <columns>
+                    <Column hAlign="Begin" minScreenWidth="Small">
+                        <header>
+                            <Button text="{i18n>colName}" press=".onSort" data:column="name" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'name' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Tablet">
+                        <header>
+                            <Button text="{i18n>colDescription}" press=".onSort" data:column="description" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'description' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Small">
+                        <header>
+                            <Button text="{i18n>colPrice}" press=".onSort" data:column="price" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'price' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Tablet" width="7rem">
+                        <header>
+                            <Button text="{i18n>colCurrency}" press=".onSort" data:column="currency_code" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'currency_code' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Tablet" width="5rem">
+                        <header>
+                            <Button text="{i18n>colStock}" press=".onSort" data:column="stocks" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'stocks' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin">
+                        <header>
+                            <Button text="{i18n>colSupplier}" press=".onSort" data:column="supplier_ID" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'supplier_ID' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Center" width="6rem">
+                        <header>
+                            <Label text="{i18n>colActions}" design="Bold"/>
+                        </header>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem
+                        type="Active"
+                        press=".onRowPress">
+                        <cells>
+                            <VBox justifyContent="Center">
+                                <Text text="{name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Input
+                                    value="{name}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    valueLiveUpdate="true"
+                                    valueStateText="{i18n>fieldRequired}"
+                                    change=".onFieldChange"/>
+                            </VBox>
+
+                            <VBox justifyContent="Center">
+                                <Text text="{description}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Input
+                                    value="{description}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"/>
+                            </VBox>
+
+                            <VBox justifyContent="Center">
+                                <ObjectNumber number="{price}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" />
+                                <Input
+                                    value="{price}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    type="Number"/>
+                            </VBox>
+
+                            <VBox justifyContent="Center">
+                                <Text text="{currency_code}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Select
+                                    selectedKey="{currency_code}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    items="{
+                                        path: 'products>/currencies',
+                                        templateShareable: false
+                                    }">
+                                    <core:Item key="{products>code}" text="{products>code} - {products>name}"/>
+                                </Select>
+                            </VBox>
+
+                            <VBox justifyContent="Center">
+                                <ObjectNumber number="{stocks}" state="{= ${stocks} > 10 ? 'Success' : 'Error' }" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" />
+                                <Input
+                                    value="{stocks}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    type="Number"/>
+                            </VBox>
+
+                            <VBox justifyContent="Center">
+                                <Text text="{supplier/name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Select
+                                    selectedKey="{supplier_ID}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    items="{
+                                        path: 'products>/suppliers',
+                                        templateShareable: false
+                                    }">
+                                    <core:Item key="{products>ID}" text="{products>name}"/>
+                                </Select>
+                            </VBox>
+
+                            <HBox justifyContent="Center">
+                                <Button
+                                    icon="sap-icon://detail-view"
+                                    type="Transparent"
+                                    tooltip="{i18n>viewDetail}"
+                                    press=".onRowPress"/>
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="{i18n>edit}"
+                                    press=".onEditRow"/>
+                            </HBox>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+
+            </Table>
+        </content>
+
+        <footer>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button
+                    id="saveBtn"
+                    text="{i18n>save}"
+                    type="Accept"
+                    icon="sap-icon://save"
+                    press=".onSave"/>
+                <Button
+                    id="cancelBtn"
+                    text="{i18n>cancel}"
+                    press=".onCancel"/>
+            </OverflowToolbar>
+        </footer>
+    </Page>
+
+</mvc:View>

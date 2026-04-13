@@ -11,24 +11,24 @@
         <tnt:header>
             <tnt:ToolHeader>
                 <Button icon="sap-icon://menu2" type="Transparent" press=".onSideNavButtonPress" />
-                <Title text="Products and Suppliers Management" />
+                <Title text="{i18n>appHeaderTitle}" />
             </tnt:ToolHeader>
         </tnt:header>
         
         <tnt:sideContent>
-            <tnt:SideNavigation selectedKey="home">
+            <tnt:SideNavigation selectedKey="{app>/selectedKey}">
                 <tnt:item>
                     <tnt:NavigationList>
-                        <tnt:NavigationListItem text="Home" icon="sap-icon://home" key="home" select=".onNavItemSelect" />
-                        <tnt:NavigationListItem text="Products" icon="sap-icon://product" key="products" select=".onNavItemSelect" />
-                        <tnt:NavigationListItem text="Suppliers" icon="sap-icon://supplier" key="suppliers" select=".onNavItemSelect" />
+                        <tnt:NavigationListItem text="{i18n>navHome}" icon="sap-icon://home" key="home" select=".onNavItemSelect" />
+                        <tnt:NavigationListItem text="{i18n>navProducts}" icon="sap-icon://product" key="products" select=".onNavItemSelect" />
+                        <tnt:NavigationListItem text="{i18n>navSuppliers}" icon="sap-icon://supplier" key="suppliers" select=".onNavItemSelect" />
                     </tnt:NavigationList>
                 </tnt:item>
             </tnt:SideNavigation>
         </tnt:sideContent>
 
         <tnt:mainContents>
-            <f:FlexibleColumnLayout id="app" backgroundDesign="Translucent" />
+            <NavContainer id="app" />
         </tnt:mainContents>
         
     </tnt:ToolPage>

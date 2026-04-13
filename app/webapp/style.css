@@ -1,0 +1,14 @@
+.headerBtn .sapMBtnInner {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    border: none !important;
+}
+
+.headerBtn .sapMBtnContent {
+    justify-content: flex-start !important;
+    text-align: left !important;
+}
+
+.sapMColumnHeader {
+    padding: 0 !important;
+}

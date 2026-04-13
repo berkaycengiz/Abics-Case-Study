@@ -1,0 +1,50 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Dialog
+        id="filterDialog"
+        title="{i18n>filterProducts}"
+        contentWidth="28rem"
+        resizable="true"
+        draggable="true">
+
+        <content>
+            <VBox class="sapUiContentPadding sapUiMediumMarginBeginEnd">
+
+                <Label text="{i18n>colCurrency}" class="sapUiSmallMarginTop"/>
+                <Select id="currencyFilter" width="100%" class="sapUiSmallMarginBottom">
+                    <items>
+                        <core:Item key="" text="{i18n>allCurrencies}"/>
+                        <core:Item key="EUR" text="EUR"/>
+                        <core:Item key="USD" text="USD"/>
+                        <core:Item key="GBP" text="GBP"/>
+                        <core:Item key="TRY" text="TRY"/>
+                    </items>
+                </Select>
+
+                <Label text="{i18n>priceRange}" class=""/>
+                <HBox width="100%" justifyContent="SpaceBetween" gap="2rem" class="sapUiSmallMarginBottom">
+                    <Input id="priceFrom" placeholder="{i18n>from}" type="Number"/>
+                    <Input id="priceTo" placeholder="{i18n>to}" type="Number"/>
+                </HBox>
+
+                <Label text="{i18n>stockRange}" class=""/>
+                <HBox width="100%" justifyContent="SpaceBetween" gap="2rem" class="sapUiSmallMarginBottom">
+                    <Input id="stocksFrom" placeholder="{i18n>from}" type="Number"/>
+                    <Input id="stocksTo" placeholder="{i18n>to}" type="Number"/>
+                </HBox>
+
+            </VBox>
+        </content>
+
+        <beginButton>
+            <Button text="{i18n>apply}" type="Emphasized" press=".onFilterConfirm"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" press=".onFilterCancel"/>
+        </endButton>
+
+    </Dialog>
+
+</core:FragmentDefinition>
