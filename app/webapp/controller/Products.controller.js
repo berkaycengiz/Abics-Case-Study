@@ -18,7 +18,7 @@ sap.ui.define([
                 hasSelection: false,
                 hasPendingChanges: false,
                 hasActiveFilters: false,
-                editingRows: [], 
+                editingRows: [],
                 allSelected: false,
                 sortColumn: "createdAt",
                 sortDescending: true
@@ -78,6 +78,11 @@ sap.ui.define([
             oListBinding.requestContexts(0, 500).then((aContexts) => {
                 const aCurrencies = aContexts.map(c => c.getObject());
                 this._oUIModel.setProperty("/currencies", aCurrencies);
+
+                // For filter dialog, prepend 'All Currencies' option
+                const aFilterCurrencies = [...aCurrencies];
+                aFilterCurrencies.unshift({ code: "", name: this._i18n("allCurrencies") });
+                this._oUIModel.setProperty("/filterCurrencies", aFilterCurrencies);
             }).catch((oErr) => {
                 console.error("Failed to load currencies", oErr);
             });
@@ -161,33 +166,68 @@ sap.ui.define([
             this._oFilterDialog.open();
         },
 
-        onFilterConfirm: function (oEvent) {
-            const oFilterBar = sap.ui.getCore().byId(this.getView().getId() + "--filterBar");
+        onFilterConfirm: function () {
             const aFilters = [];
             const aTokens = [];
 
-            const oCurrSelect = sap.ui.getCore().byId(this.getView().getId() + "--currencyFilter");
+            // Currency filter
+            const oCurrSelect = this.byId("currencyFilter");
             if (oCurrSelect && oCurrSelect.getSelectedKey()) {
                 const sCurr = oCurrSelect.getSelectedKey();
-                aFilters.push(new Filter("currency", FilterOperator.EQ, sCurr));
-                aTokens.push({ key: "currency", text: `Currency: ${sCurr}` });
+                const sCurrText = oCurrSelect.getSelectedItem().getText();
+                aFilters.push(new Filter("currency_code", FilterOperator.EQ, sCurr));
+                aTokens.push({ key: "currency_code", text: "Currency: " + sCurrText });
             }
 
-            const oPriceFrom = sap.ui.getCore().byId(this.getView().getId() + "--priceFrom");
-            const oPriceTo = sap.ui.getCore().byId(this.getView().getId() + "--priceTo");
-            if (oPriceFrom && oPriceFrom.getValue()) {
-                aFilters.push(new Filter("price", FilterOperator.GE, parseFloat(oPriceFrom.getValue())));
-                aTokens.push({ key: "priceFrom", text: `Price ≥ ${oPriceFrom.getValue()}` });
-            }
-            if (oPriceTo && oPriceTo.getValue()) {
-                aFilters.push(new Filter("price", FilterOperator.LE, parseFloat(oPriceTo.getValue())));
-                aTokens.push({ key: "priceTo", text: `Price ≤ ${oPriceTo.getValue()}` });
+            // Supplier filter
+            const oSupplierSelect = this.byId("supplierFilter");
+            if (oSupplierSelect && oSupplierSelect.getSelectedKey()) {
+                const sSupp = oSupplierSelect.getSelectedKey();
+                const sSuppName = oSupplierSelect.getSelectedItem().getText();
+                aFilters.push(new Filter("supplier_ID", FilterOperator.EQ, sSupp));
+                aTokens.push({ key: "supplier_ID", text: "Supplier: " + sSuppName });
             }
 
-            const oStockMin = sap.ui.getCore().byId(this.getView().getId() + "--stockMin");
-            if (oStockMin && oStockMin.getValue()) {
-                aFilters.push(new Filter("stocks", FilterOperator.GE, parseInt(oStockMin.getValue())));
-                aTokens.push({ key: "stocksMin", text: `Stock ≥ ${oStockMin.getValue()}` });
+            // Price range filter
+            const oPriceFrom = this.byId("priceFrom");
+            const oPriceTo = this.byId("priceTo");
+            var sPriceFromVal = oPriceFrom ? oPriceFrom.getValue() : "";
+            var sPriceToVal = oPriceTo ? oPriceTo.getValue() : "";
+            if (sPriceFromVal) {
+                var fPriceFrom = parseFloat(sPriceFromVal);
+                aFilters.push(new Filter("price", FilterOperator.GE, fPriceFrom));
+            }
+            if (sPriceToVal) {
+                var fPriceTo = parseFloat(sPriceToVal);
+                aFilters.push(new Filter("price", FilterOperator.LE, fPriceTo));
+            }
+            if (sPriceFromVal && sPriceToVal) {
+                aTokens.push({ key: "price", text: fPriceFrom + " \u2264 Price \u2264 " + fPriceTo });
+            } else if (sPriceFromVal) {
+                aTokens.push({ key: "price", text: "Price \u2265 " + fPriceFrom });
+            } else if (sPriceToVal) {
+                aTokens.push({ key: "price", text: "Price \u2264 " + fPriceTo });
+            }
+
+            // Stock range filter
+            const oStockFrom = this.byId("stocksFrom");
+            const oStockTo = this.byId("stocksTo");
+            var sStockFromVal = oStockFrom ? oStockFrom.getValue() : "";
+            var sStockToVal = oStockTo ? oStockTo.getValue() : "";
+            if (sStockFromVal) {
+                var iStockFrom = parseInt(sStockFromVal, 10);
+                aFilters.push(new Filter("stocks", FilterOperator.GE, iStockFrom));
+            }
+            if (sStockToVal) {
+                var iStockTo = parseInt(sStockToVal, 10);
+                aFilters.push(new Filter("stocks", FilterOperator.LE, iStockTo));
+            }
+            if (sStockFromVal && sStockToVal) {
+                aTokens.push({ key: "stocks", text: iStockFrom + " \u2264 Stock \u2264 " + iStockTo });
+            } else if (sStockFromVal) {
+                aTokens.push({ key: "stocks", text: "Stock \u2265 " + iStockFrom });
+            } else if (sStockToVal) {
+                aTokens.push({ key: "stocks", text: "Stock \u2264 " + iStockTo });
             }
 
             this._aFilters = aFilters;
@@ -230,7 +270,11 @@ sap.ui.define([
 
         _applyFilters: function () {
             const aAllFilters = [...this._aSearchFilters, ...this._aFilters];
-            this._getBinding().filter(aAllFilters);
+            if (aAllFilters.length > 0) {
+                this._getBinding().filter(new Filter({ filters: aAllFilters, and: true }));
+            } else {
+                this._getBinding().filter([]);
+            }
         },
 
         onAddRow: function () {
@@ -259,7 +303,7 @@ sap.ui.define([
             if (!oContext) return;
             const sID = oContext.getProperty("ID");
             const aEditingRows = this._oUIModel.getProperty("/editingRows") || [];
-            
+
             if (sID && !aEditingRows.includes(sID)) {
                 this._oUIModel.setProperty("/editingRows", [...aEditingRows, sID]);
                 this._oUIModel.refresh(true);
@@ -274,7 +318,7 @@ sap.ui.define([
             if (oDetailView) {
                 oDetailView.setBindingContext(oContext);
             }
-            
+
             if (sap.f && sap.f.LayoutType) {
                 this._oUIModel.setProperty("/layout", sap.f.LayoutType.TwoColumnsMidExpanded);
             } else {
@@ -297,7 +341,7 @@ sap.ui.define([
             }
         },
 
-        isRowReadonly: function(sID, aEditingRows) {
+        isRowReadonly: function (sID, aEditingRows) {
             try {
                 if (!sID || !aEditingRows) return true;
                 return aEditingRows.indexOf(sID) === -1;
@@ -306,7 +350,7 @@ sap.ui.define([
             }
         },
 
-        isRowEditable: function(sID, aEditingRows) {
+        isRowEditable: function (sID, aEditingRows) {
             try {
                 if (!sID || !aEditingRows) return false;
                 return aEditingRows.indexOf(sID) !== -1;
@@ -378,21 +422,21 @@ sap.ui.define([
 
             MessageBox.confirm(
                 this._i18n("deleteConfirm").replace("{0}", aSelected.length), {
-                    onClose: (sAction) => {
-                        if (sAction === MessageBox.Action.OK) {
-                            aSelected.forEach(oItem => {
-                                oItem.getBindingContext().delete("productsGroup");
-                            });
-                            this._oODataModel.submitBatch("productsGroup").then(() => {
-                                MessageToast.show(this._i18n("deleteSuccess"));
-                                this._oUIModel.setProperty("/hasSelection", false);
-                                this._oUIModel.setProperty("/hasPendingChanges", false);
-                            }).catch((oErr) => {
-                                MessageBox.error(this._i18n("deleteError") + "\n" + (oErr.message || oErr));
-                            });
-                        }
+                onClose: (sAction) => {
+                    if (sAction === MessageBox.Action.OK) {
+                        aSelected.forEach(oItem => {
+                            oItem.getBindingContext().delete("productsGroup");
+                        });
+                        this._oODataModel.submitBatch("productsGroup").then(() => {
+                            MessageToast.show(this._i18n("deleteSuccess"));
+                            this._oUIModel.setProperty("/hasSelection", false);
+                            this._oUIModel.setProperty("/hasPendingChanges", false);
+                        }).catch((oErr) => {
+                            MessageBox.error(this._i18n("deleteError") + "\n" + (oErr.message || oErr));
+                        });
                     }
                 }
+            }
             );
         },
 
