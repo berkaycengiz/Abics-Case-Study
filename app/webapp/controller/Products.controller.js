@@ -13,7 +13,7 @@ sap.ui.define([
     return Controller.extend("com.abics.casestudy.controller.Products", {
         onInit: function () {
             this._oUIModel = new JSONModel({
-                layout: fioriLibrary.LayoutType.OneColumn,
+                layout: "OneColumn",
                 count: 0,
                 hasSelection: false,
                 hasPendingChanges: false,
@@ -57,8 +57,6 @@ sap.ui.define([
             });
             oListBinding.requestContexts(0, 500).then((aContexts) => {
                 const aSuppliers = aContexts.map(c => c.getObject());
-                // Prepend empty supplier
-                aSuppliers.unshift({ ID: "", name: this._i18n("noSupplier") });
                 this._oUIModel.setProperty("/suppliers", aSuppliers);
             }).catch((oErr) => {
                 console.error("Failed to load suppliers", oErr);
@@ -326,34 +324,126 @@ sap.ui.define([
         },
 
         onRowPress: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext();
-            if (!oContext) return;
+            console.log("[Products] onRowPress triggered!");
+            const oSource = oEvent.getSource();
+            let oContext = oSource.getBindingContext();
 
-            const oDetailView = this.byId("detailView");
-            if (oDetailView) {
-                oDetailView.setBindingContext(oContext);
+            // Sometime HBox/Button might not have direct context depending on UI5 version,
+            // fallback to parent's binding context (ColumnListItem)
+            if (!oContext && oSource.getParent) {
+                const oParent = oSource.getParent();
+                if (oParent && oParent.getBindingContext) {
+                    oContext = oParent.getBindingContext();
+                }
             }
 
-            if (sap.f && sap.f.LayoutType) {
-                this._oUIModel.setProperty("/layout", sap.f.LayoutType.TwoColumnsMidExpanded);
+            if (!oContext) {
+                console.warn("[Products] No binding context found for clicked row.");
+                return;
+            }
+            
+            console.log("[Products] Context found:", oContext.getPath());
+
+            const oFCL = this._getFCL();
+            const oDetailView = this._getDetailView();
+
+            if (oDetailView) {
+                console.log("[Products] Refreshing Detail View binding...");
+                // Just use the existing context from the table. 
+                // OData V4 will automatically detect missing properties (like supplier/name) and fetch them smartly!
+                oDetailView.setBindingContext(oContext);
             } else {
-                // Fiori library import referenced from onInit setup
-                const fioriLibrary = sap.ui.require("sap/f/library");
-                this._oUIModel.setProperty("/layout", fioriLibrary.LayoutType.TwoColumnsMidExpanded);
+                console.error("[Products] Detail view not found by _getDetailView!");
+            }
+
+            if (oFCL) {
+                console.log("[Products] Setting Layout to TwoColumnsMidExpanded");
+                oFCL.setLayout("TwoColumnsMidExpanded");
+            } else {
+                console.error("[Products] FlexibleColumnLayout not found by _getFCL!");
+            }
+        },
+
+        onOpenEditDialog: function (oEvent) {
+            const oDetailView = this._getDetailView();
+            const oContext = oDetailView ? oDetailView.getBindingContext() : null;
+            
+            if (!oContext) {
+                MessageToast.show(this._i18n("noProductSelected"));
+                return;
+            }
+
+            if (!this._oEditDialog) {
+                this._oEditDialog = sap.ui.xmlfragment(
+                    this.getView().getId(),
+                    "com.abics.casestudy.view.fragment.ProductEditDialog",
+                    this
+                );
+                // We add it to the detail view as a dependent so it inherits its model and binding context
+                if (oDetailView) {
+                    oDetailView.addDependent(this._oEditDialog);
+                } else {
+                    this.getView().addDependent(this._oEditDialog);
+                }
+            }
+            
+            this._oEditDialog.setBindingContext(oContext);
+            this._oEditDialog.open();
+        },
+
+        onSaveEditDialog: function () {
+            this._oODataModel.submitBatch("productsGroup").then(() => {
+                MessageToast.show(this._i18n("saveSuccess"));
+                if (this._oEditDialog) {
+                    this._oEditDialog.close();
+                }
+            }).catch((oErr) => {
+                MessageBox.error(this._i18n("saveError") + "\n" + (oErr.message || oErr));
+            });
+        },
+
+        onCancelEditDialog: function () {
+            if (this._oODataModel.hasPendingChanges("productsGroup")) {
+                this._oODataModel.resetChanges("productsGroup");
+            }
+            if (this._oEditDialog) {
+                this._oEditDialog.close();
             }
         },
 
         onCloseDetail: function () {
-            if (sap.f && sap.f.LayoutType) {
-                this._oUIModel.setProperty("/layout", sap.f.LayoutType.OneColumn);
-            } else {
-                const fioriLibrary = sap.ui.require("sap/f/library");
-                this._oUIModel.setProperty("/layout", fioriLibrary.LayoutType.OneColumn);
+            console.log("[Products] onCloseDetail triggered!");
+            const oFCL = this._getFCL();
+            const oDetailView = this._getDetailView();
+
+            if (oFCL) {
+                oFCL.setLayout("OneColumn");
             }
-            const oDetailView = this.byId("detailView");
             if (oDetailView) {
+                oDetailView.unbindElement();
                 oDetailView.setBindingContext(null);
             }
+        },
+
+        _getFCL: function () {
+            // Master view is inside FCL's beginColumnPages, but UI5 might wrap it. Traverse upwards!
+            let oControl = this.getView();
+            while (oControl && oControl.getParent) {
+                oControl = oControl.getParent();
+                if (oControl && oControl.isA("sap.f.FlexibleColumnLayout")) {
+                    return oControl;
+                }
+            }
+            return null;
+        },
+
+        _getDetailView: function () {
+            var oFCL = this._getFCL();
+            if (oFCL) {
+                var aMidPages = oFCL.getMidColumnPages();
+                return aMidPages && aMidPages.length > 0 ? aMidPages[0] : null;
+            }
+            return null;
         },
 
         isRowReadonly: function (sID, aEditingRows) {
@@ -453,26 +543,6 @@ sap.ui.define([
                 }
             }
             );
-        },
-
-        onRowPress: function (oEvent) {
-            const oContext = oEvent.getSource().getBindingContext()
-                || oEvent.getSource().getParent().getBindingContext();
-            if (!oContext) return;
-
-            this._oUIModel.setProperty("/layout", LayoutType.TwoColumnsMidExpanded);
-
-            const oDetailView = this.byId("detailView");
-            if (oDetailView) {
-                oDetailView.bindElement({
-                    path: oContext.getPath(),
-                    parameters: { $expand: "supplier" }
-                });
-            }
-        },
-
-        onCloseDetail: function () {
-            this._oUIModel.setProperty("/layout", LayoutType.OneColumn);
         },
 
 

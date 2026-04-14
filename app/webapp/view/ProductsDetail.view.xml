@@ -19,6 +19,11 @@
                 </f:snappedHeading>
                 <f:actions>
                     <Button
+                        text="{i18n>edit}"
+                        icon="sap-icon://edit"
+                        type="Emphasized"
+                        press=".onOpenEditDialog"/>
+                    <Button
                         text="{i18n>closeDetail}"
                         icon="sap-icon://decline"
                         type="Transparent"

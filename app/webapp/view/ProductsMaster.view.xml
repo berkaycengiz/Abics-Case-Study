@@ -150,7 +150,6 @@
                             <VBox justifyContent="Center">
                                 <ObjectNumber 
                                     number="{price}" 
-                                    unit="{currency_code}"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" />
                                 <Input
                                     value="{
@@ -187,6 +186,7 @@
                                 <Text text="{supplier/name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
                                 <Select
                                     selectedKey="{supplier_ID}"
+                                    forceSelection="false"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
                                     items="{
                                         path: 'products>/suppliers',

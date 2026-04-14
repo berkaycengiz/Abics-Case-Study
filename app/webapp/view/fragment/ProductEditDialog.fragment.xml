@@ -1,0 +1,61 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form">
+    <Dialog
+        id="productEditDialog"
+        title="{i18n>editProduct}"
+        contentWidth="400px">
+        <content>
+            <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12">
+                
+                <Label text="{i18n>colName}" required="true"/>
+                <Input value="{name}" valueStateText="{i18n>fieldRequired}"/>
+
+                <Label text="{i18n>colDescription}"/>
+                <Input value="{description}"/>
+
+                <Label text="{i18n>colPrice}"/>
+                <Input 
+                    value="{
+                        path: 'price',
+                        type: 'sap.ui.model.odata.type.Decimal',
+                        constraints: { precision: 15, scale: 2 }
+                    }"/>
+
+                <Label text="{i18n>colCurrency}"/>
+                <Select
+                    selectedKey="{currency_code}"
+                    forceSelection="false"
+                    items="{
+                        path: 'products>/currencies',
+                        templateShareable: false
+                    }">
+                    <core:Item key="{products>code}" text="{products>code} - {products>name}"/>
+                </Select>
+
+                <Label text="{i18n>colStock}"/>
+                <Input value="{stocks}" type="Number"/>
+
+                <Label text="{i18n>supplierInfo}"/>
+                <Select
+                    selectedKey="{supplier_ID}"
+                    forceSelection="false"
+                    items="{
+                        path: 'products>/suppliers',
+                        templateShareable: false
+                    }">
+                    <core:Item key="{products>ID}" text="{products>name}"/>
+                </Select>
+
+            </f:SimpleForm>
+        </content>
+        <buttons>
+            <Button text="{i18n>save}" type="Emphasized" icon="sap-icon://save" press=".onSaveEditDialog" />
+            <Button text="{i18n>cancel}" press=".onCancelEditDialog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

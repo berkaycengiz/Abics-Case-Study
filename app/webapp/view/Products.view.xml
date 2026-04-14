@@ -8,7 +8,7 @@
     xmlns:table="sap.ui.table"
     displayBlock="true">
 
-    <f:FlexibleColumnLayout id="fcl" layout="{ui>/layout}">
+    <f:FlexibleColumnLayout id="fcl" layout="OneColumn">
 
         <f:beginColumnPages>
             <mvc:XMLView viewName="com.abics.casestudy.view.ProductsMaster" id="masterView"/>
