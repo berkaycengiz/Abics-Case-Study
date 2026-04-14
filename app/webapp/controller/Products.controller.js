@@ -48,13 +48,7 @@ sap.ui.define([
         _onModelChange: function () {
             const bHas = this._oODataModel.hasPendingChanges("productsGroup");
             const aEditingRows = this._oUIModel.getProperty("/editingRows") || [];
-            if (aEditingRows.length === 0 && bHas) {
-                // Ignore OData formatting changes if user hasn't explicitly entered edit mode
-                this._oODataModel.resetChanges("productsGroup");
-                this._oUIModel.setProperty("/hasPendingChanges", false);
-            } else {
-                this._oUIModel.setProperty("/hasPendingChanges", bHas || aEditingRows.length > 0);
-            }
+            this._oUIModel.setProperty("/hasPendingChanges", bHas || aEditingRows.length > 0);
         },
 
         _loadSuppliers: function () {
@@ -132,16 +126,35 @@ sap.ui.define([
         onSort: function (oEvent) {
             const oBtn = oEvent.getSource();
             const sColumn = oBtn.data("column");
+            const sCurrentSort = this._oUIModel.getProperty("/sortColumn");
+            const bCurrentDesc = this._oUIModel.getProperty("/sortDescending");
 
-            let bDescending = false;
-            if (this._oUIModel.getProperty("/sortColumn") === sColumn) {
-                bDescending = !this._oUIModel.getProperty("/sortDescending");
+            let sNewColumn = sColumn;
+            let bNewDescending = false;
+            let aSorters = [];
+
+            if (sCurrentSort === sColumn) {
+                if (!bCurrentDesc) {
+                    // 2. State: Ascending -> Descending
+                    bNewDescending = true;
+                    aSorters = [new Sorter(sColumn, true)];
+                } else {
+                    // 3. State: Descending -> None (Clear Sort)
+                    sNewColumn = "";
+                    bNewDescending = false;
+                    // Empty array lets OData V4 fall back to the XML default (createdAt desc)
+                    aSorters = [];
+                }
+            } else {
+                // 1. State: New Column -> Ascending
+                bNewDescending = false;
+                aSorters = [new Sorter(sColumn, false)];
             }
 
-            this._oUIModel.setProperty("/sortColumn", sColumn);
-            this._oUIModel.setProperty("/sortDescending", bDescending);
+            this._oUIModel.setProperty("/sortColumn", sNewColumn);
+            this._oUIModel.setProperty("/sortDescending", bNewDescending);
 
-            this._aSorters = [new Sorter(sColumn, bDescending)];
+            this._aSorters = aSorters;
             this._getBinding().sort(this._aSorters);
         },
 
@@ -292,6 +305,7 @@ sap.ui.define([
 
             const aEditingRows = this._oUIModel.getProperty("/editingRows") || [];
             this._oUIModel.setProperty("/editingRows", [...aEditingRows, sID]);
+            this._onModelChange();
             this._oUIModel.refresh(true);
 
             const oTable = this._getTable();
@@ -306,6 +320,7 @@ sap.ui.define([
 
             if (sID && !aEditingRows.includes(sID)) {
                 this._oUIModel.setProperty("/editingRows", [...aEditingRows, sID]);
+                this._onModelChange();
                 this._oUIModel.refresh(true);
             }
         },

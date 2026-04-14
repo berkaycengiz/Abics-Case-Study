@@ -115,7 +115,7 @@
                     </Column>
                     <Column hAlign="Begin">
                         <header>
-                            <Button text="{i18n>colSupplier}" press=".onSort" data:column="supplier_ID" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'supplier_ID' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                            <Button text="{i18n>colSupplier}" press=".onSort" data:column="supplier/name" type="Transparent" iconFirst="false" icon="{= ${products>/sortColumn} === 'supplier/name' ? (${products>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
                         </header>
                     </Column>
                     <Column hAlign="Center" width="6rem">
@@ -148,17 +148,24 @@
                             </VBox>
 
                             <VBox justifyContent="Center">
-                                <ObjectNumber number="{price}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" />
+                                <ObjectNumber 
+                                    number="{price}" 
+                                    unit="{currency_code}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" />
                                 <Input
-                                    value="{price}"
-                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
-                                    type="Number"/>
+                                    value="{
+                                        path: 'price',
+                                        type: 'sap.ui.model.odata.type.Decimal',
+                                        constraints: { precision: 15, scale: 2 }
+                                    }"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"/>
                             </VBox>
 
                             <VBox justifyContent="Center">
                                 <Text text="{currency_code}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
                                 <Select
                                     selectedKey="{currency_code}"
+                                    forceSelection="false"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
                                     items="{
                                         path: 'products>/currencies',

@@ -5,9 +5,9 @@ using { cuid, managed, Currency, Country } from '@sap/cds/common';
 entity Products: cuid, managed {
     name: String(100) @mandatory;
     description: String(250) @mandatory;
-    price: Decimal(15,2) @mandatory @assert.range: [0, null];
+    price: Decimal(15,2) @mandatory;
     currency: Currency @mandatory;
-    stocks: Integer @mandatory  @assert.range: [0, null];
+    stocks: Integer @mandatory;
     supplier: Association to Suppliers @mandatory;
 }
 
