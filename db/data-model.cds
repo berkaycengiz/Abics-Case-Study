@@ -4,10 +4,10 @@ using { cuid, managed, Currency, Country } from '@sap/cds/common';
 
 entity Products: cuid, managed {
     name: String(100) @mandatory;
-    description: String(250) @mandatory;
-    price: Decimal(15,2) @mandatory;
+    description: String(250);
+    price: Decimal(15,2);
     currency: Currency @mandatory;
-    stocks: Integer @mandatory;
+    stocks: Integer;
     supplier: Association to Suppliers @mandatory;
 }
 

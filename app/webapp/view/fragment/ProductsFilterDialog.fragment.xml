@@ -11,16 +11,15 @@
 
         <content>
             <VBox class="sapUiContentPadding sapUiMediumMarginBeginEnd">
-
                 <Label text="{i18n>colCurrency}" class="sapUiSmallMarginTop"/>
                 <Select id="currencyFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'products>/filterCurrencies', templateShareable: false }">
                     <items>
-                        <core:Item key="{products>code}" text="{products>code} - {products>name}"/>
+                        <core:Item key="{products>code}" text="{products>code} {products>name}"/>
                     </items>
                 </Select>
 
                 <Label text="{i18n>colSupplier}" class=""/>
-                <Select id="supplierFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'products>/suppliers', templateShareable: false }">
+                <Select id="supplierFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'products>/filterSuppliers', templateShareable: false }">
                     <items>
                         <core:Item key="{products>ID}" text="{products>name}"/>
                     </items>

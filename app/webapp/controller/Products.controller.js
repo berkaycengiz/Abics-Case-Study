@@ -6,8 +6,9 @@ sap.ui.define([
     "sap/ui/model/Sorter",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
-    "sap/f/library"
-], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageBox, MessageToast, fioriLibrary) {
+    "sap/f/library",
+    "sap/base/strings/formatMessage"
+], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageBox, MessageToast, fioriLibrary, formatMessage) {
     "use strict";
 
     return Controller.extend("com.abics.casestudy.controller.Products", {
@@ -21,7 +22,8 @@ sap.ui.define([
                 editingRows: [],
                 allSelected: false,
                 sortColumn: "createdAt",
-                sortDescending: true
+                sortDescending: true,
+                isInlineEditing: false
             });
             this.getView().setModel(this._oUIModel, "products");
 
@@ -49,6 +51,7 @@ sap.ui.define([
             const bHas = this._oODataModel.hasPendingChanges("productsGroup");
             const aEditingRows = this._oUIModel.getProperty("/editingRows") || [];
             this._oUIModel.setProperty("/hasPendingChanges", bHas || aEditingRows.length > 0);
+            this._oUIModel.setProperty("/isInlineEditing", aEditingRows.length > 0);
         },
 
         _loadSuppliers: function () {
@@ -58,6 +61,11 @@ sap.ui.define([
             oListBinding.requestContexts(0, 500).then((aContexts) => {
                 const aSuppliers = aContexts.map(c => c.getObject());
                 this._oUIModel.setProperty("/suppliers", aSuppliers);
+
+                // For filter dialog, prepend 'All Suppliers' option
+                const aFilterSuppliers = [...aSuppliers];
+                aFilterSuppliers.unshift({ ID: "", name: this._i18n("allSuppliers") });
+                this._oUIModel.setProperty("/filterSuppliers", aFilterSuppliers);
             }).catch((oErr) => {
                 console.error("Failed to load suppliers", oErr);
             });
@@ -187,7 +195,7 @@ sap.ui.define([
                 const sCurr = oCurrSelect.getSelectedKey();
                 const sCurrText = oCurrSelect.getSelectedItem().getText();
                 aFilters.push(new Filter("currency_code", FilterOperator.EQ, sCurr));
-                aTokens.push({ key: "currency_code", text: "Currency: " + sCurrText });
+                aTokens.push({ key: "currency_code", text: this._i18n("currencyLabel") + ": " + sCurrText });
             }
 
             // Supplier filter
@@ -196,7 +204,7 @@ sap.ui.define([
                 const sSupp = oSupplierSelect.getSelectedKey();
                 const sSuppName = oSupplierSelect.getSelectedItem().getText();
                 aFilters.push(new Filter("supplier_ID", FilterOperator.EQ, sSupp));
-                aTokens.push({ key: "supplier_ID", text: "Supplier: " + sSuppName });
+                aTokens.push({ key: "supplier_ID", text: this._i18n("supplierLabel") + ": " + sSuppName });
             }
 
             // Price range filter
@@ -213,11 +221,11 @@ sap.ui.define([
                 aFilters.push(new Filter("price", FilterOperator.LE, fPriceTo));
             }
             if (sPriceFromVal && sPriceToVal) {
-                aTokens.push({ key: "price", text: fPriceFrom + " \u2264 Price \u2264 " + fPriceTo });
+                aTokens.push({ key: "price", text: this._i18n("priceRangeTemplate", [fPriceFrom, fPriceTo]) });
             } else if (sPriceFromVal) {
-                aTokens.push({ key: "price", text: "Price \u2265 " + fPriceFrom });
+                aTokens.push({ key: "price", text: this._i18n("priceMin", [fPriceFrom]) });
             } else if (sPriceToVal) {
-                aTokens.push({ key: "price", text: "Price \u2264 " + fPriceTo });
+                aTokens.push({ key: "price", text: this._i18n("priceMax", [fPriceTo]) });
             }
 
             // Stock range filter
@@ -234,11 +242,11 @@ sap.ui.define([
                 aFilters.push(new Filter("stocks", FilterOperator.LE, iStockTo));
             }
             if (sStockFromVal && sStockToVal) {
-                aTokens.push({ key: "stocks", text: iStockFrom + " \u2264 Stock \u2264 " + iStockTo });
+                aTokens.push({ key: "stocks", text: this._i18n("stockRangeTemplate", [iStockFrom, iStockTo]) });
             } else if (sStockFromVal) {
-                aTokens.push({ key: "stocks", text: "Stock \u2265 " + iStockFrom });
+                aTokens.push({ key: "stocks", text: this._i18n("stockMin", [iStockFrom]) });
             } else if (sStockToVal) {
-                aTokens.push({ key: "stocks", text: "Stock \u2264 " + iStockTo });
+                aTokens.push({ key: "stocks", text: this._i18n("stockMax", [iStockTo]) });
             }
 
             this._aFilters = aFilters;
@@ -357,8 +365,8 @@ sap.ui.define([
             }
 
             if (oFCL) {
-                console.log("[Products] Setting Layout to TwoColumnsMidExpanded");
-                oFCL.setLayout("TwoColumnsMidExpanded");
+                console.log("[Products] Setting Layout to TwoColumnsBeginExpanded");
+                oFCL.setLayout("TwoColumnsBeginExpanded");
             } else {
                 console.error("[Products] FlexibleColumnLayout not found by _getFCL!");
             }
@@ -404,10 +412,20 @@ sap.ui.define([
 
         onCancelEditDialog: function () {
             if (this._oODataModel.hasPendingChanges("productsGroup")) {
-                this._oODataModel.resetChanges("productsGroup");
-            }
-            if (this._oEditDialog) {
-                this._oEditDialog.close();
+                MessageBox.confirm(this._i18n("cancelConfirm"), {
+                    onClose: (sAction) => {
+                        if (sAction === MessageBox.Action.OK) {
+                            this._oODataModel.resetChanges("productsGroup");
+                            if (this._oEditDialog) {
+                                this._oEditDialog.close();
+                            }
+                        }
+                    }
+                });
+            } else {
+                if (this._oEditDialog) {
+                    this._oEditDialog.close();
+                }
             }
         },
 
@@ -444,6 +462,19 @@ sap.ui.define([
                 return aMidPages && aMidPages.length > 0 ? aMidPages[0] : null;
             }
             return null;
+        },
+
+        formatSupplierName: function (sID, aSuppliers, sOriginalName) {
+            if (!sID) {
+                return sOriginalName || "";
+            }
+            if (aSuppliers && aSuppliers.length > 0) {
+                const oSupplier = aSuppliers.find(s => s.ID === sID);
+                if (oSupplier) {
+                    return oSupplier.name;
+                }
+            }
+            return sOriginalName || "";
         },
 
         isRowReadonly: function (sID, aEditingRows) {
@@ -483,8 +514,8 @@ sap.ui.define([
             this._oODataModel.submitBatch("productsGroup").then(() => {
                 MessageToast.show(this._i18n("saveSuccess"));
                 this._oUIModel.setProperty("/editingRows", []);
+                this._onModelChange();
                 this._oUIModel.refresh(true);
-                this._oUIModel.setProperty("/hasPendingChanges", false);
                 this._getBinding().refresh();
             }).catch((oErr) => {
                 MessageBox.error(this._i18n("saveError") + "\n" + (oErr.message || oErr));
@@ -505,15 +536,22 @@ sap.ui.define([
         },
 
         onCancel: function () {
+            const bHasChanges = this._oODataModel.hasPendingChanges("productsGroup");
+            if (!bHasChanges) {
+                this._oUIModel.setProperty("/editingRows", []);
+                this._onModelChange();
+                this._oUIModel.refresh(true);
+                this._getBinding().refresh();
+                return;
+            }
+
             MessageBox.confirm(this._i18n("cancelConfirm"), {
                 onClose: (sAction) => {
                     if (sAction === MessageBox.Action.OK) {
-                        if (this._oODataModel.hasPendingChanges("productsGroup")) {
-                            this._oODataModel.resetChanges("productsGroup");
-                        }
+                        this._oODataModel.resetChanges("productsGroup");
                         this._oUIModel.setProperty("/editingRows", []);
+                        this._onModelChange();
                         this._oUIModel.refresh(true);
-                        this._oUIModel.setProperty("/hasPendingChanges", false);
                         this._getBinding().refresh();
                     }
                 }
@@ -582,7 +620,7 @@ sap.ui.define([
                 const oResult = oAction.getBoundContext().getObject();
                 this._showCsvValidationResult(oResult);
             }).catch((oErr) => {
-                MessageBox.error("CSV validation failed: " + (oErr.message || oErr));
+                MessageBox.error(this._i18n("csvValidationFailed", [oErr.message || oErr]));
             });
         },
 
@@ -612,7 +650,7 @@ sap.ui.define([
                 this._getBinding().refresh();
                 this._sCsvContent = null;
             }).catch((oErr) => {
-                MessageBox.error("CSV upload failed: " + (oErr.message || oErr));
+                MessageBox.error(this._i18n("csvUploadFailed", [oErr.message || oErr]));
             });
         },
 
@@ -640,10 +678,9 @@ sap.ui.define([
             });
         },
 
-        _i18n: function (sKey) {
-            // async: true konfigürasyonunda getResourceBundle Promise döndüğü için senkron kullanımda
-            // getProperty ile değer doğrudan modelden çekilir. (Argümanlar varsa manuel replace kullanılmalıdır)
-            return this.getOwnerComponent().getModel("i18n").getProperty(sKey);
+        _i18n: function (sKey, aArgs) {
+            const sText = this.getOwnerComponent().getModel("i18n").getProperty(sKey);
+            return aArgs ? formatMessage(sText, aArgs) : sText;
         }
 
     });

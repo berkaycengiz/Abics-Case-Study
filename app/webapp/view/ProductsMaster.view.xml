@@ -9,7 +9,7 @@
     <Page
         id="productsPage"
         showHeader="true"
-        showFooter="{products>/hasPendingChanges}">
+        showFooter="{products>/isInlineEditing}">
 
         <customHeader>
             <Bar>
@@ -126,9 +126,7 @@
                 </columns>
 
                 <items>
-                    <ColumnListItem
-                        type="Active"
-                        press=".onRowPress">
+                    <ColumnListItem type="Inactive">
                         <cells>
                             <VBox justifyContent="Center">
                                 <Text text="{name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
@@ -175,7 +173,7 @@
                             </VBox>
 
                             <VBox justifyContent="Center">
-                                <ObjectNumber number="{stocks}" state="{= ${stocks} > 10 ? 'Success' : 'Error' }" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" />
+                                <ObjectNumber number="{stocks}" state="{= ${stocks} >= 25 ? 'Success' : (${stocks} >= 10 ? 'Warning' : 'Error') }" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" />
                                 <Input
                                     value="{stocks}"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
@@ -183,7 +181,14 @@
                             </VBox>
 
                             <VBox justifyContent="Center">
-                                <Text text="{supplier/name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Text text="{
+                                    parts: [
+                                        {path: 'supplier_ID'},
+                                        {path: 'products>/suppliers'},
+                                        {path: 'supplier/name'}
+                                    ],
+                                    formatter: '.formatSupplierName'
+                                }" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
                                 <Select
                                     selectedKey="{supplier_ID}"
                                     forceSelection="false"

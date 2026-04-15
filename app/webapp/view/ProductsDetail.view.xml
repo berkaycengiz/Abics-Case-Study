@@ -14,9 +14,6 @@
                 <f:heading>
                     <Title text="{name}" level="H2"/>
                 </f:heading>
-                <f:snappedHeading>
-                    <Title text="{name}" level="H3"/>
-                </f:snappedHeading>
                 <f:actions>
                     <Button
                         text="{i18n>edit}"
@@ -24,7 +21,6 @@
                         type="Emphasized"
                         press=".onOpenEditDialog"/>
                     <Button
-                        text="{i18n>closeDetail}"
                         icon="sap-icon://decline"
                         type="Transparent"
                         press=".onCloseDetail"/>
@@ -39,10 +35,7 @@
                     <content>
                         <form:SimpleForm
                             editable="false"
-                            layout="ResponsiveGridLayout"
-                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
-                            emptySpanXL="0" emptySpanL="0" emptySpanM="0"
-                            columnsXL="2" columnsL="2" columnsM="1">
+                            layout="ResponsiveGridLayout">
 
                             <Label text="{i18n>colName}"/>
                             <Text text="{name}"/>
@@ -59,18 +52,17 @@
                             <Label text="{i18n>colStock}"/>
                             <ObjectStatus
                                 text="{stocks}"
-                                state="{= ${stocks} > 50 ? 'Success' : ${stocks} > 10 ? 'Warning' : 'Error'}"/>
+                                state="{= ${stocks} >= 25 ? 'Success' : (${stocks} >= 10 ? 'Warning' : 'Error') }"/>
 
                         </form:SimpleForm>
                     </content>
                 </Panel>
 
-                <Panel headerText="{i18n>supplierInfo}" expandable="true" expanded="true">
+                <Panel headerText="{i18n>supplierInfo}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
                     <content>
                         <form:SimpleForm
                             editable="false"
-                            layout="ResponsiveGridLayout"
-                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12">
+                            layout="ResponsiveGridLayout">
 
                             <Label text="{i18n>colName}"/>
                             <Text text="{supplier/name}"/>
@@ -80,6 +72,15 @@
 
                             <Label text="{i18n>supplierPhone}"/>
                             <Text text="{supplier/phone}"/>
+
+                            <Label text="{i18n>supplierCity}"/>
+                            <Text text="{supplier/city}"/>
+
+                            <Label text="{i18n>supplierAddress}"/>
+                            <Text text="{supplier/address}"/>
+
+                            <Label text="{i18n>supplierCountry}"/>
+                            <Text text="{supplier/country_code}"/>
 
                         </form:SimpleForm>
                     </content>

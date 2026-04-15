@@ -4,8 +4,7 @@
     xmlns:f="sap.ui.layout.form">
     <Dialog
         id="productEditDialog"
-        title="{i18n>editProduct}"
-        contentWidth="400px">
+        title="{i18n>editProduct}">
         <content>
             <f:SimpleForm
                 editable="true"
