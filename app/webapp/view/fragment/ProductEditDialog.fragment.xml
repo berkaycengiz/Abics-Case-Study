@@ -12,21 +12,24 @@
                 labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12">
                 
                 <Label text="{i18n>colName}" required="true"/>
-                <Input value="{name}" valueStateText="{i18n>fieldRequired}"/>
+                <Input id="editName" value="{name}" valueStateText="{i18n>fieldRequired}"/>
 
                 <Label text="{i18n>colDescription}"/>
-                <Input value="{description}"/>
+                <Input id="editDescription" value="{description}"/>
 
                 <Label text="{i18n>colPrice}"/>
                 <Input 
+                    id="editPrice"
                     value="{
                         path: 'price',
                         type: 'sap.ui.model.odata.type.Decimal',
                         constraints: { precision: 15, scale: 2 }
-                    }"/>
+                    }"
+                    valueStateText="{i18n>priceMustBePositive}"/>
 
-                <Label text="{i18n>colCurrency}"/>
+                <Label text="{i18n>colCurrency}" required="true"/>
                 <Select
+                    id="editCurrency"
                     selectedKey="{currency_code}"
                     forceSelection="false"
                     items="{
@@ -37,10 +40,11 @@
                 </Select>
 
                 <Label text="{i18n>colStock}"/>
-                <Input value="{stocks}" type="Number"/>
+                <Input id="editStocks" value="{stocks}" type="Number" valueStateText="{i18n>stocksMustBePositive}"/>
 
-                <Label text="{i18n>supplierInfo}"/>
+                <Label text="{i18n>colSupplier}" required="true"/>
                 <Select
+                    id="editSupplier"
                     selectedKey="{supplier_ID}"
                     forceSelection="false"
                     items="{

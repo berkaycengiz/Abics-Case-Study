@@ -1,11 +1,9 @@
 <core:FragmentDefinition
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
-    xmlns:u="sap.ui.unified"> <Dialog
-        id="csvDialog"
-        title="{i18n>csvUpload}"
-        contentWidth="36rem">
-
+    xmlns:u="sap.ui.unified">
+    
+    <Dialog id="csvDialog" title="{i18n>csvUpload}" contentWidth="36rem" resizable="true" draggable="true">
         <content>
             <VBox class="sapUiContentPadding" width="100%">
 
@@ -22,37 +20,51 @@
                     mimeType="text/csv,application/vnd.ms-excel"
                     placeholder="{i18n>chooseCsv}"
                     change=".onCsvFileChange"
-                    width="100%"
                     class="sapUiSmallMarginBottom"/>
 
-                <Button
-                    id="validateCsvBtn"
-                    text="{i18n>validate}"
-                    icon="sap-icon://accept"
-                    enabled="false"
-                    press=".onValidateCsv"
-                    class="sapUiSmallMarginBottom"/>
+                <VBox id="csvValidationResults" visible="false" class="sapUiSmallMarginTop" width="100%">
+                    <Text
+                        text="{= ${csvResult>/fileName} + ' (' + ${csvResult>/totalRows} + ' rows)'}"
+                        class="sapUiSmallMarginBottom sapUiSmallText"/>
 
-                <VBox id="csvValidationResults" visible="false" class="sapUiSmallMarginTop">
                     <List
-                        headerText="{i18n>validationResults}"
-                        items="{csvResult>/errors}">
-                        <StandardListItem
-                            title="{csvResult>message}"
-                            description="{i18n>row}: {csvResult>row} | {i18n>column}: {csvResult>column}"
-                            type="Inactive"
-                            icon="sap-icon://error"/>
+                        showSeparators="None"
+                        items="{csvResult>/checks}">
+                        <CustomListItem type="Inactive">
+                            <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                <core:Icon
+                                    src="{= ${csvResult>passed} ? 'sap-icon://accept' : 'sap-icon://decline'}"
+                                    color="{= ${csvResult>passed} ? 'Positive' : 'Negative'}"
+                                    size="1rem"
+                                    class="sapUiSmallMarginEnd"/>
+                                <VBox>
+                                    <Text text="{csvResult>label}"/>
+                                    <Text text="{csvResult>detail}" class="sapUiSmallText sapUiTextColorQuaternary"/>
+                                </VBox>
+                                <core:HTML content="&lt;span style='margin-left:auto'&gt;&lt;/span&gt;"/>
+                                <ObjectStatus
+                                    text="{= ${csvResult>passed} ? 'OK' : 'Error'}"
+                                    state="{= ${csvResult>passed} ? 'Success' : 'Error'}"/>
+                            </HBox>
+                        </CustomListItem>
                     </List>
-                    <MessageStrip
-                        visible="{= ${csvResult>/valid} === true}"
-                        text="{i18n>csvValid}"
-                        type="Success"
-                        showIcon="true"/>
-                    <MessageStrip
-                        visible="{= ${csvResult>/valid} === false}"
-                        text="{i18n>csvInvalid}"
-                        type="Error"
-                        showIcon="true"/>
+                    <Panel
+                        id="csvErrorPanel"
+                        visible="false"
+                        headerText="{i18n>validationResults}"
+                        expandable="true"
+                        expanded="true"
+                        class="sapUiSmallMarginTop">
+                        <List items="{csvResult>/errors}" showSeparators="Inner">
+                            <StandardListItem
+                                title="{csvResult>message}"
+                                description="{i18n>row}: {csvResult>row} | {i18n>column}: {csvResult>column}"
+                                type="Inactive"
+                                icon="sap-icon://error"
+                                iconInset="false"/>
+                        </List>
+                    </Panel>
+
                 </VBox>
 
             </VBox>

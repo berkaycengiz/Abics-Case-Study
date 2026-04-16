@@ -165,10 +165,14 @@ sap.ui.define([
         },
 
         onDataReceived: function () {
-            var oBinding = this._getBinding();
-            if (oBinding) {
-                var iCount = oBinding.getCount();
-                this._oUIModel.setProperty("/count", iCount || 0);
+            this._updateCount();
+        },
+
+        _updateCount: function () {
+            var oTable = this._getTable();
+            if (oTable) {
+                var iCount = oTable.getItems().length;
+                this._oUIModel.setProperty("/count", iCount);
             }
         },
 
@@ -312,6 +316,7 @@ sap.ui.define([
             const aEditingRows = this._oUIModel.getProperty("/editingRows") || [];
             this._oUIModel.setProperty("/editingRows", [...aEditingRows, sID]);
             this._onModelChange();
+            this._updateCount();
             this._oUIModel.refresh(true);
 
             const oTable = this._getTable();
@@ -400,6 +405,10 @@ sap.ui.define([
         },
 
         onSaveEditDialog: function () {
+            if (!this._validateEditDialog()) {
+                MessageBox.error(this._i18n("validationError"));
+                return;
+            }
             this._oODataModel.submitBatch("productsGroup").then(() => {
                 MessageToast.show(this._i18n("saveSuccess"));
                 if (this._oEditDialog) {
@@ -408,6 +417,71 @@ sap.ui.define([
             }).catch((oErr) => {
                 MessageBox.error(this._i18n("saveError") + "\n" + (oErr.message || oErr));
             });
+        },
+
+        _validateEditDialog: function () {
+            let bValid = true;
+            const sViewId = this.getView().getId();
+
+            const oNameInput = sap.ui.getCore().byId(sViewId + "--editName");
+            if (oNameInput) {
+                if (!oNameInput.getValue() || oNameInput.getValue().trim() === "") {
+                    oNameInput.setValueState("Error");
+                    oNameInput.setValueStateText(this._i18n("fieldRequired"));
+                    bValid = false;
+                } else {
+                    oNameInput.setValueState("None");
+                }
+            }
+
+            const oPriceInput = sap.ui.getCore().byId(sViewId + "--editPrice");
+            if (oPriceInput) {
+                const sPriceVal = oPriceInput.getValue();
+                if (sPriceVal && sPriceVal.trim() !== "") {
+                    const fPrice = parseFloat(sPriceVal);
+                    if (isNaN(fPrice) || fPrice < 0) {
+                        oPriceInput.setValueState("Error");
+                        oPriceInput.setValueStateText(this._i18n("priceMustBePositive"));
+                        bValid = false;
+                    } else {
+                        oPriceInput.setValueState("None");
+                    }
+                } else {
+                    oPriceInput.setValueState("None");
+                }
+            }
+
+            const oCurrencySelect = sap.ui.getCore().byId(sViewId + "--editCurrency");
+            if (oCurrencySelect && !oCurrencySelect.getSelectedKey()) {
+                oCurrencySelect.setValueState("Error");
+                oCurrencySelect.setValueStateText(this._i18n("currencyRequired"));
+                bValid = false;
+            } else if (oCurrencySelect) {
+                oCurrencySelect.setValueState("None");
+            }
+
+            const oStocksInput = sap.ui.getCore().byId(sViewId + "--editStocks");
+            if (oStocksInput) {
+                const iStocks = parseInt(oStocksInput.getValue());
+                if (isNaN(iStocks) || iStocks < 0) {
+                    oStocksInput.setValueState("Error");
+                    oStocksInput.setValueStateText(this._i18n("stocksMustBePositive"));
+                    bValid = false;
+                } else {
+                    oStocksInput.setValueState("None");
+                }
+            }
+
+            const oSupplierSelect = sap.ui.getCore().byId(sViewId + "--editSupplier");
+            if (oSupplierSelect && !oSupplierSelect.getSelectedKey()) {
+                oSupplierSelect.setValueState("Error");
+                oSupplierSelect.setValueStateText(this._i18n("supplierRequired"));
+                bValid = false;
+            } else if (oSupplierSelect) {
+                oSupplierSelect.setValueState("None");
+            }
+
+            return bValid;
         },
 
         onCancelEditDialog: function () {
@@ -525,13 +599,80 @@ sap.ui.define([
         _validateAll: function () {
             let bValid = true;
             const oTable = this._getTable();
+            const aEditingRows = this._oUIModel.getProperty("/editingRows") || [];
+
             oTable.getItems().forEach(oItem => {
-                const oNameInput = oItem.getCells()[0];
-                if (oNameInput && oNameInput.isA("sap.m.Input") && oNameInput.getValue() === "") {
-                    oNameInput.setValueState("Error");
+                const oCtx = oItem.getBindingContext();
+                if (!oCtx) return;
+                const sID = oCtx.getProperty("ID");
+                if (!aEditingRows.includes(sID)) return;
+
+                const aCells = oItem.getCells();
+
+                const oNameVBox = aCells[0];
+                const oNameInput = oNameVBox && oNameVBox.getItems ? oNameVBox.getItems().find(c => c.isA("sap.m.Input")) : null;
+                if (oNameInput) {
+                    if (!oNameInput.getValue() || oNameInput.getValue().trim() === "") {
+                        oNameInput.setValueState("Error");
+                        oNameInput.setValueStateText(this._i18n("fieldRequired"));
+                        bValid = false;
+                    } else {
+                        oNameInput.setValueState("None");
+                    }
+                }
+
+                const oPriceVBox = aCells[2];
+                const oPriceInput = oPriceVBox && oPriceVBox.getItems ? oPriceVBox.getItems().find(c => c.isA("sap.m.Input")) : null;
+                if (oPriceInput) {
+                    const sVal = oPriceInput.getValue();
+                    if (sVal && sVal.trim() !== "") {
+                        const fVal = parseFloat(sVal);
+                        if (isNaN(fVal) || fVal < 0) {
+                            oPriceInput.setValueState("Error");
+                            oPriceInput.setValueStateText(this._i18n("priceMustBePositive"));
+                            bValid = false;
+                        } else {
+                            oPriceInput.setValueState("None");
+                        }
+                    } else {
+                        oPriceInput.setValueState("None");
+                    }
+                }
+
+                const oCurrVBox = aCells[3];
+                const oCurrSelect = oCurrVBox && oCurrVBox.getItems ? oCurrVBox.getItems().find(c => c.isA("sap.m.Select")) : null;
+                if (oCurrSelect && !oCurrSelect.getSelectedKey()) {
+                    oCurrSelect.setValueState("Error");
+                    oCurrSelect.setValueStateText(this._i18n("currencyRequired"));
                     bValid = false;
+                } else if (oCurrSelect) {
+                    oCurrSelect.setValueState("None");
+                }
+
+                const oStocksVBox = aCells[4];
+                const oStocksInput = oStocksVBox && oStocksVBox.getItems ? oStocksVBox.getItems().find(c => c.isA("sap.m.Input")) : null;
+                if (oStocksInput) {
+                    const iVal = parseInt(oStocksInput.getValue());
+                    if (isNaN(iVal) || iVal < 0) {
+                        oStocksInput.setValueState("Error");
+                        oStocksInput.setValueStateText(this._i18n("stocksMustBePositive"));
+                        bValid = false;
+                    } else {
+                        oStocksInput.setValueState("None");
+                    }
+                }
+
+                const oSupplierVBox = aCells[5];
+                const oSupplierSelect = oSupplierVBox && oSupplierVBox.getItems ? oSupplierVBox.getItems().find(c => c.isA("sap.m.Select")) : null;
+                if (oSupplierSelect && !oSupplierSelect.getSelectedKey()) {
+                    oSupplierSelect.setValueState("Error");
+                    oSupplierSelect.setValueStateText(this._i18n("supplierRequired"));
+                    bValid = false;
+                } else if (oSupplierSelect) {
+                    oSupplierSelect.setValueState("None");
                 }
             });
+
             return bValid;
         },
 
@@ -574,6 +715,7 @@ sap.ui.define([
                             MessageToast.show(this._i18n("deleteSuccess"));
                             this._oUIModel.setProperty("/hasSelection", false);
                             this._oUIModel.setProperty("/hasPendingChanges", false);
+                            this._updateCount();
                         }).catch((oErr) => {
                             MessageBox.error(this._i18n("deleteError") + "\n" + (oErr.message || oErr));
                         });
@@ -600,12 +742,12 @@ sap.ui.define([
             const oFile = oEvent.getParameter("files")[0];
             if (!oFile) return;
 
+            this._sCsvFileName = oFile.name;
+
             const oReader = new FileReader();
             oReader.onload = (e) => {
                 this._sCsvContent = e.target.result;
-
-                const oValidateBtn = sap.ui.getCore().byId(this.getView().getId() + "--validateCsvBtn");
-                if (oValidateBtn) oValidateBtn.setEnabled(true);
+                this.onValidateCsv();
             };
             oReader.readAsText(oFile);
         },
@@ -618,23 +760,53 @@ sap.ui.define([
 
             oAction.execute().then(() => {
                 const oResult = oAction.getBoundContext().getObject();
-                this._showCsvValidationResult(oResult);
+                this._showCsvValidationResult(oResult, this._sCsvFileName);
             }).catch((oErr) => {
                 MessageBox.error(this._i18n("csvValidationFailed", [oErr.message || oErr]));
             });
         },
 
-        _showCsvValidationResult: function (oResult) {
-            const oResultModel = new JSONModel(oResult);
+        _showCsvValidationResult: function (oResult, sFileName) {
+            const aErrors = oResult.errors || [];
+            const bValid = oResult.valid === true;
+
+            const lines = (this._sCsvContent || "").split(/\r?\n/).filter(l => l.trim() !== "");
+            const iTotalRows = Math.max(0, lines.length - 1);
+            const header = lines.length > 0 ? lines[0].split(",").map(h => h.trim().toLowerCase().replace(/^"|"$/g, "")) : [];
+            const requiredCols = ["name", "currency_code", "supplier_id"];
+            const bHasRequiredCols = requiredCols.every(c => header.includes(c));
+            const bHasRows = iTotalRows > 0;
+            const bDataValid = bHasRequiredCols && bHasRows && aErrors.length === 0;
+
+            const aChecks = [
+                { label: this._i18n("csvCheckFormat"),  passed: true,            detail: "" },
+                { label: this._i18n("csvCheckColumns"), passed: bHasRequiredCols, detail: bHasRequiredCols ? "" : requiredCols.filter(c => !header.includes(c)).join(", ") },
+                { label: this._i18n("csvCheckRows"),    passed: bHasRows,         detail: "" },
+                { label: this._i18n("csvCheckData"),    passed: bDataValid,       detail: bDataValid ? "" : aErrors.slice(0, 3).map(e => e.message).join("; ") }
+            ];
+
+            const oResultModel = new JSONModel({
+                fileName: sFileName || "",
+                totalRows: iTotalRows,
+                valid: bValid,
+                checks: aChecks,
+                errors: aErrors
+            });
+
             const oResultsBox = sap.ui.getCore().byId(this.getView().getId() + "--csvValidationResults");
             if (oResultsBox) {
                 oResultsBox.setModel(oResultModel, "csvResult");
                 oResultsBox.setVisible(true);
             }
 
+            const oErrorPanel = sap.ui.getCore().byId(this.getView().getId() + "--csvErrorPanel");
+            if (oErrorPanel) {
+                oErrorPanel.setVisible(aErrors.length > 0);
+            }
+
             const oUploadBtn = sap.ui.getCore().byId(this.getView().getId() + "--uploadCsvBtn");
             if (oUploadBtn) {
-                oUploadBtn.setEnabled(oResult.valid === true);
+                oUploadBtn.setEnabled(bValid);
             }
         },
 
