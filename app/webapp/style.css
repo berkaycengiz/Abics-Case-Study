@@ -12,3 +12,15 @@
 .sapMColumnHeader {
     padding: 0 !important;
 }
+
+.sapMPanelContent{
+    padding: 0 !important;
+}
+
+.sapMLIB{
+    padding: 0 !important
+}
+
+.customLineHeight {
+    line-height: normal !important;
+}

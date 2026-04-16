@@ -3,10 +3,16 @@
     xmlns:core="sap.ui.core"
     xmlns:u="sap.ui.unified">
     
-    <Dialog id="csvDialog" title="{i18n>csvUpload}" contentWidth="36rem" resizable="true" draggable="true">
+    <Dialog 
+        id="csvDialog" 
+        title="{i18n>csvUpload}" 
+        contentWidth="36rem"
+        resizable="true"
+        draggable="true">
+        
         <content>
-            <VBox class="sapUiContentPadding" width="100%">
-
+            <VBox class="sapUiMediumMargin">
+                
                 <MessageStrip
                     text="{i18n>csvInstructions}"
                     type="Information"
@@ -14,15 +20,17 @@
                     class="sapUiSmallMarginBottom"/>
 
                 <Label text="{i18n>selectFile}" class="sapUiSmallMarginBottom"/>
+                
                 <u:FileUploader
                     id="csvFileUploader"
+                    width="100%"
                     fileType="csv"
                     mimeType="text/csv,application/vnd.ms-excel"
                     placeholder="{i18n>chooseCsv}"
                     change=".onCsvFileChange"
                     class="sapUiSmallMarginBottom"/>
 
-                <VBox id="csvValidationResults" visible="false" class="sapUiSmallMarginTop" width="100%">
+                <VBox id="csvValidationResults" visible="false" class="sapUiSmallMarginTop">
                     <Text
                         text="{= ${csvResult>/fileName} + ' (' + ${csvResult>/totalRows} + ' rows)'}"
                         class="sapUiSmallMarginBottom sapUiSmallText"/>
@@ -31,23 +39,17 @@
                         showSeparators="None"
                         items="{csvResult>/checks}">
                         <CustomListItem type="Inactive">
-                            <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                            <HBox class="sapUiTinyMarginBottom" alignItems="Center">
                                 <core:Icon
                                     src="{= ${csvResult>passed} ? 'sap-icon://accept' : 'sap-icon://decline'}"
                                     color="{= ${csvResult>passed} ? 'Positive' : 'Negative'}"
-                                    size="1rem"
-                                    class="sapUiSmallMarginEnd"/>
-                                <VBox>
-                                    <Text text="{csvResult>label}"/>
-                                    <Text text="{csvResult>detail}" class="sapUiSmallText sapUiTextColorQuaternary"/>
-                                </VBox>
-                                <core:HTML content="&lt;span style='margin-left:auto'&gt;&lt;/span&gt;"/>
-                                <ObjectStatus
-                                    text="{= ${csvResult>passed} ? 'OK' : 'Error'}"
-                                    state="{= ${csvResult>passed} ? 'Success' : 'Error'}"/>
+                                    size="1.25rem"
+                                    class="sapUiSmallMarginEnd customLineHeight"/>
+                                    <Text text="{csvResult>label}" />
                             </HBox>
                         </CustomListItem>
                     </List>
+                    
                     <Panel
                         id="csvErrorPanel"
                         visible="false"
