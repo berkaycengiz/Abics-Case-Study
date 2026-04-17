@@ -131,7 +131,8 @@
 				},
 				"TargetSuppliers": {
 					"viewName": "Suppliers",
-					"viewLevel": 2
+					"viewLevel": 2,
+					"controllerName": "com.abics.casestudy.controller.Suppliers"
 				}
 			}
 		}

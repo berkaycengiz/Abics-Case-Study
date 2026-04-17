@@ -41,10 +41,29 @@ sap.ui.define([
             this._loadSuppliers();
 
             this._oODataModel.attachPropertyChange(this._onModelChange, this);
+
+            // Reset inline edit state when navigating away from products
+            var oRouter = this.getOwnerComponent().getRouter();
+            oRouter.attachRouteMatched(this._onRouteChanged, this);
         },
 
         onExit: function () {
             this._oODataModel.detachPropertyChange(this._onModelChange, this);
+            var oRouter = this.getOwnerComponent().getRouter();
+            oRouter.detachRouteMatched(this._onRouteChanged, this);
+        },
+
+        _onRouteChanged: function (oEvent) {
+            var sRouteName = oEvent.getParameter("name");
+            if (sRouteName !== "products" && sRouteName !== "productsDetail") {
+                // Leaving the products page — discard changes and exit edit mode
+                if (this._oODataModel.hasPendingChanges("productsGroup")) {
+                    this._oODataModel.resetChanges("productsGroup");
+                }
+                this._oUIModel.setProperty("/editingRows", []);
+                this._onModelChange();
+                this._oUIModel.refresh(true);
+            }
         },
 
         _onModelChange: function () {
@@ -89,7 +108,19 @@ sap.ui.define([
         },
 
         _getTable: function () {
-            return this.byId("productsTable");
+            var oTable = this.byId("productTable");
+            if (!oTable) {
+                // If not found in current view (e.g. called from Detail), search in Master view
+                var oFCL = this._getFCL();
+                if (oFCL) {
+                    var aBeginPages = oFCL.getBeginColumnPages();
+                    var oMasterView = aBeginPages && aBeginPages.length > 0 ? aBeginPages[0] : null;
+                    if (oMasterView) {
+                        oTable = oMasterView.byId("productTable");
+                    }
+                }
+            }
+            return oTable;
         },
 
         _getBinding: function () {
@@ -194,7 +225,7 @@ sap.ui.define([
             const aTokens = [];
 
             // Currency filter
-            const oCurrSelect = this.byId("currencyFilter");
+            const oCurrSelect = this.byId("productCurrencyFilter");
             if (oCurrSelect && oCurrSelect.getSelectedKey()) {
                 const sCurr = oCurrSelect.getSelectedKey();
                 const sCurrText = oCurrSelect.getSelectedItem().getText();
@@ -203,7 +234,7 @@ sap.ui.define([
             }
 
             // Supplier filter
-            const oSupplierSelect = this.byId("supplierFilter");
+            const oSupplierSelect = this.byId("productSupplierFilter");
             if (oSupplierSelect && oSupplierSelect.getSelectedKey()) {
                 const sSupp = oSupplierSelect.getSelectedKey();
                 const sSuppName = oSupplierSelect.getSelectedItem().getText();
@@ -212,8 +243,8 @@ sap.ui.define([
             }
 
             // Price range filter
-            const oPriceFrom = this.byId("priceFrom");
-            const oPriceTo = this.byId("priceTo");
+            const oPriceFrom = this.byId("productPriceFrom");
+            const oPriceTo = this.byId("productPriceTo");
             var sPriceFromVal = oPriceFrom ? oPriceFrom.getValue() : "";
             var sPriceToVal = oPriceTo ? oPriceTo.getValue() : "";
             if (sPriceFromVal) {
@@ -233,8 +264,8 @@ sap.ui.define([
             }
 
             // Stock range filter
-            const oStockFrom = this.byId("stocksFrom");
-            const oStockTo = this.byId("stocksTo");
+            const oStockFrom = this.byId("productStocksFrom");
+            const oStockTo = this.byId("productStocksTo");
             var sStockFromVal = oStockFrom ? oStockFrom.getValue() : "";
             var sStockToVal = oStockTo ? oStockTo.getValue() : "";
             if (sStockFromVal) {
@@ -274,7 +305,7 @@ sap.ui.define([
         },
 
         _renderFilterTokens: function (aTokens) {
-            const oTokensBox = this.byId("filterTokens");
+            const oTokensBox = this.byId("productFilterTokens");
             if (!oTokensBox) return;
             oTokensBox.destroyItems();
             aTokens.forEach(t => {
@@ -392,14 +423,22 @@ sap.ui.define([
                     "com.abics.casestudy.view.fragment.ProductEditDialog",
                     this
                 );
-                // We add it to the detail view as a dependent so it inherits its model and binding context
-                if (oDetailView) {
-                    oDetailView.addDependent(this._oEditDialog);
-                } else {
-                    this.getView().addDependent(this._oEditDialog);
-                }
+                // We add it to the view as a dependent so it inherits its model
+                this.getView().addDependent(this._oEditDialog);
             }
             
+            // Create buffer model for isolated editing
+            var oData = oContext.getObject();
+            var oEditModel = new JSONModel({
+                name: oData.name || "",
+                description: oData.description || "",
+                price: oData.price || 0,
+                currency_code: oData.currency_code || "",
+                stocks: oData.stocks || 0,
+                supplier_ID: oData.supplier_ID || null
+            });
+            this._oEditDialog.setModel(oEditModel, "editModel");
+
             this._oEditDialog.setBindingContext(oContext);
             this._oEditDialog.open();
         },
@@ -409,8 +448,23 @@ sap.ui.define([
                 MessageBox.error(this._i18n("validationError"));
                 return;
             }
+
+            var oDetailView = this._getDetailView();
+            var oContext = oDetailView ? oDetailView.getBindingContext() : null;
+            var oEditData = this._oEditDialog.getModel("editModel").getData();
+
+            if (oContext) {
+                // Sync changes back to OData context
+                Object.keys(oEditData).forEach(function (sProp) {
+                    if (oContext.getProperty(sProp) !== oEditData[sProp]) {
+                        oContext.setProperty(sProp, oEditData[sProp]);
+                    }
+                });
+            }
+
             this._oODataModel.submitBatch("productsGroup").then(() => {
                 MessageToast.show(this._i18n("saveSuccess"));
+                this._getBinding().refresh(); // Refresh master table
                 if (this._oEditDialog) {
                     this._oEditDialog.close();
                 }
@@ -423,7 +477,7 @@ sap.ui.define([
             let bValid = true;
             const sViewId = this.getView().getId();
 
-            const oNameInput = sap.ui.getCore().byId(sViewId + "--editName");
+            const oNameInput = sap.ui.getCore().byId(sViewId + "--productEditName");
             if (oNameInput) {
                 if (!oNameInput.getValue() || oNameInput.getValue().trim() === "") {
                     oNameInput.setValueState("Error");
@@ -434,7 +488,7 @@ sap.ui.define([
                 }
             }
 
-            const oPriceInput = sap.ui.getCore().byId(sViewId + "--editPrice");
+            const oPriceInput = sap.ui.getCore().byId(sViewId + "--productEditPrice");
             if (oPriceInput) {
                 const sPriceVal = oPriceInput.getValue();
                 if (sPriceVal && sPriceVal.trim() !== "") {
@@ -451,7 +505,7 @@ sap.ui.define([
                 }
             }
 
-            const oCurrencySelect = sap.ui.getCore().byId(sViewId + "--editCurrency");
+            const oCurrencySelect = sap.ui.getCore().byId(sViewId + "--productEditCurrency");
             if (oCurrencySelect && !oCurrencySelect.getSelectedKey()) {
                 oCurrencySelect.setValueState("Error");
                 oCurrencySelect.setValueStateText(this._i18n("currencyRequired"));
@@ -460,7 +514,7 @@ sap.ui.define([
                 oCurrencySelect.setValueState("None");
             }
 
-            const oStocksInput = sap.ui.getCore().byId(sViewId + "--editStocks");
+            const oStocksInput = sap.ui.getCore().byId(sViewId + "--productEditStocks");
             if (oStocksInput) {
                 const iStocks = parseInt(oStocksInput.getValue());
                 if (isNaN(iStocks) || iStocks < 0) {
@@ -472,7 +526,7 @@ sap.ui.define([
                 }
             }
 
-            const oSupplierSelect = sap.ui.getCore().byId(sViewId + "--editSupplier");
+            const oSupplierSelect = sap.ui.getCore().byId(sViewId + "--productEditSupplier");
             if (oSupplierSelect && !oSupplierSelect.getSelectedKey()) {
                 oSupplierSelect.setValueState("Error");
                 oSupplierSelect.setValueStateText(this._i18n("supplierRequired"));
@@ -485,11 +539,23 @@ sap.ui.define([
         },
 
         onCancelEditDialog: function () {
-            if (this._oODataModel.hasPendingChanges("productsGroup")) {
+            var oDetailView = this._getDetailView();
+            var oContext = oDetailView ? oDetailView.getBindingContext() : null;
+            var oEditData = this._oEditDialog.getModel("editModel").getData();
+            var bChanged = false;
+
+            if (oContext) {
+                var oOriginalData = oContext.getObject();
+                bChanged = Object.keys(oEditData).some(function (sProp) {
+                    // Simple comparison for basic types
+                    return oOriginalData[sProp] != oEditData[sProp];
+                });
+            }
+
+            if (bChanged) {
                 MessageBox.confirm(this._i18n("cancelConfirm"), {
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
-                            this._oODataModel.resetChanges("productsGroup");
                             if (this._oEditDialog) {
                                 this._oEditDialog.close();
                             }
@@ -518,7 +584,6 @@ sap.ui.define([
         },
 
         _getFCL: function () {
-            // Master view is inside FCL's beginColumnPages, but UI5 might wrap it. Traverse upwards!
             let oControl = this.getView();
             while (oControl && oControl.getParent) {
                 oControl = oControl.getParent();
@@ -692,8 +757,8 @@ sap.ui.define([
                         this._oODataModel.resetChanges("productsGroup");
                         this._oUIModel.setProperty("/editingRows", []);
                         this._onModelChange();
+                        // Redundant refresh removed to let OData V4 handle the removal smoothly
                         this._oUIModel.refresh(true);
-                        this._getBinding().refresh();
                     }
                 }
             });
@@ -793,18 +858,18 @@ sap.ui.define([
                 errors: aErrors
             });
 
-            const oResultsBox = sap.ui.getCore().byId(this.getView().getId() + "--csvValidationResults");
+            const oResultsBox = sap.ui.getCore().byId(this.getView().getId() + "--productCsvValidationResults");
             if (oResultsBox) {
                 oResultsBox.setModel(oResultModel, "csvResult");
                 oResultsBox.setVisible(true);
             }
 
-            const oErrorPanel = sap.ui.getCore().byId(this.getView().getId() + "--csvErrorPanel");
+            const oErrorPanel = sap.ui.getCore().byId(this.getView().getId() + "--productCsvErrorPanel");
             if (oErrorPanel) {
                 oErrorPanel.setVisible(aErrors.length > 0);
             }
 
-            const oUploadBtn = sap.ui.getCore().byId(this.getView().getId() + "--uploadCsvBtn");
+            const oUploadBtn = sap.ui.getCore().byId(this.getView().getId() + "--productUploadCsvBtn");
             if (oUploadBtn) {
                 oUploadBtn.setEnabled(bValid);
             }
@@ -831,24 +896,6 @@ sap.ui.define([
             this._sCsvContent = null;
         },
 
-        checkPendingChanges: function () {
-            return new Promise((resolve, reject) => {
-                if (!this._oODataModel.hasPendingChanges("productsGroup")) {
-                    resolve();
-                    return;
-                }
-                MessageBox.confirm(this._i18n("unsavedChanges"), {
-                    onClose: (sAction) => {
-                        if (sAction === MessageBox.Action.OK) {
-                            this._oODataModel.resetChanges("productsGroup");
-                            resolve();
-                        } else {
-                            reject();
-                        }
-                    }
-                });
-            });
-        },
 
         _i18n: function (sKey, aArgs) {
             const sText = this.getOwnerComponent().getModel("i18n").getProperty(sKey);

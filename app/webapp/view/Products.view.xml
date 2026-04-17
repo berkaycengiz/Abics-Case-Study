@@ -8,14 +8,14 @@
     xmlns:table="sap.ui.table"
     displayBlock="true">
 
-    <f:FlexibleColumnLayout id="fcl" layout="OneColumn">
+    <f:FlexibleColumnLayout id="productFCL" layout="OneColumn">
 
         <f:beginColumnPages>
-            <mvc:XMLView viewName="com.abics.casestudy.view.ProductsMaster" id="masterView"/>
+            <mvc:XMLView viewName="com.abics.casestudy.view.ProductsMaster" id="productMasterView"/>
         </f:beginColumnPages>
 
         <f:midColumnPages>
-            <mvc:XMLView viewName="com.abics.casestudy.view.ProductsDetail" id="detailView"/>
+            <mvc:XMLView viewName="com.abics.casestudy.view.ProductsDetail" id="productDetailView"/>
         </f:midColumnPages>
 
     </f:FlexibleColumnLayout>

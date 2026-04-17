@@ -1,0 +1,48 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form">
+    <Dialog
+        id="supplierEditDialog"
+        title="{i18n>editSupplierTitle}">
+        <content>
+            <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12">
+
+                <Label text="{i18n>colName}" required="true"/>
+                <Input id="supplierEditName" value="{editModel>/name}" valueStateText="{i18n>fieldRequired}"/>
+
+                <Label text="{i18n>supplierEmail}"/>
+                <Input id="supplierEditEmail" value="{editModel>/email}" type="Email"/>
+
+                <Label text="{i18n>supplierPhone}"/>
+                <Input id="supplierEditPhone" value="{editModel>/phone}" type="Tel"/>
+
+                <Label text="{i18n>supplierCity}"/>
+                <Input id="supplierEditCity" value="{editModel>/city}"/>
+
+                <Label text="{i18n>supplierCountry}"/>
+                <ComboBox
+                    id="supplierEditCountry"
+                    selectedKey="{editModel>/country_code}"
+                    change=".onFieldChange"
+                    items="{
+                        path: 'suppliers>/countries',
+                        templateShareable: false
+                    }">
+                    <core:Item key="{suppliers>code}" text="{suppliers>name} - {suppliers>code}"/>
+                </ComboBox>
+
+                <Label text="{i18n>supplierAddress}"/>
+                <Input id="supplierEditAddress" value="{editModel>/address}"/>
+
+            </f:SimpleForm>
+        </content>
+        <buttons>
+            <Button text="{i18n>save}" type="Emphasized" icon="sap-icon://save" press=".onSaveEditDialog" />
+            <Button text="{i18n>cancel}" press=".onCancelEditDialog" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

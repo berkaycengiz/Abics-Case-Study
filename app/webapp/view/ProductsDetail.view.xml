@@ -7,7 +7,7 @@
     xmlns:form="sap.ui.layout.form"
     displayBlock="true">
 
-    <fi:SemanticPage id="detailPage" headerPinnable="false" toggleHeaderOnTitleClick="false">
+    <fi:SemanticPage id="productDetailPage" headerPinnable="false" toggleHeaderOnTitleClick="false">
 
         <fi:titleHeading>
             <f:DynamicPageTitle>

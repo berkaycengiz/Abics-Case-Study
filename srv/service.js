@@ -132,4 +132,105 @@ module.exports = cds.service.impl(async function (srv) {
 
         return { created, updated: 0, errors };
     });
+
+
+    srv.on("validateSuppliersCsv", async (req) => {
+        const { csvContent } = req.data;
+
+        if (!csvContent) {
+            return { valid: false, errors: [{ row: 0, column: "", message: "CSV content is empty." }] };
+        }
+
+        const lines = csvContent.split(/\r?\n/).filter(l => l.trim() !== "");
+        const errors = [];
+
+        if (lines.length < 2) {
+            return { valid: false, errors: [{ row: 0, column: "", message: "CSV must have a header row and at least one data row." }] };
+        }
+
+        const requiredColumns = ["name"];
+        const header = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+
+        for (const col of requiredColumns) {
+            if (!header.includes(col)) {
+                errors.push({ row: 0, column: col, message: `Missing required column: "${col}"` });
+            }
+        }
+
+        if (errors.length > 0) {
+            return { valid: false, errors };
+        }
+
+        const nameIdx    = header.indexOf("name");
+        const emailIdx   = header.indexOf("email");
+
+        for (let i = 1; i < lines.length; i++) {
+            const rowNum = i + 1;
+            const cols   = lines[i].split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+
+            const name  = nameIdx  >= 0 ? cols[nameIdx]  : null;
+            const email = emailIdx >= 0 ? cols[emailIdx] : null;
+
+            if (!name || name === "") {
+                errors.push({ row: rowNum, column: "name", message: "Name is required." });
+            }
+            if (email !== null && email !== undefined && email !== "") {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(email)) {
+                    errors.push({ row: rowNum, column: "email", message: `Email "${email}" is not valid.` });
+                }
+            }
+        }
+
+        return { valid: errors.length === 0, errors };
+    });
+
+
+    srv.on("uploadSuppliersCsv", async (req) => {
+        const { csvContent } = req.data;
+
+        if (!csvContent) {
+            return req.error(400, "CSV content is empty.");
+        }
+
+        const lines = csvContent.split(/\r?\n/).filter(l => l.trim() !== "");
+        if (lines.length < 2) {
+            return req.error(400, "CSV must have at least one data row.");
+        }
+
+        const header     = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+        const nameIdx    = header.indexOf("name");
+        const emailIdx   = header.indexOf("email");
+        const phoneIdx   = header.indexOf("phone");
+        const cityIdx    = header.indexOf("city");
+        const addressIdx = header.indexOf("address");
+        const countryIdx = header.indexOf("country_code") >= 0 ? header.indexOf("country_code") : header.indexOf("country");
+
+        const { Suppliers } = this.entities;
+        let created = 0;
+        let errors  = 0;
+
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+
+            try {
+                const newSupplier = {
+                    ID      : cds.utils.uuid(),
+                    name    : nameIdx    >= 0 ? cols[nameIdx]    : "",
+                    email   : emailIdx   >= 0 && cols[emailIdx]   ? cols[emailIdx]   : null,
+                    phone   : phoneIdx   >= 0 && cols[phoneIdx]   ? cols[phoneIdx]   : null,
+                    city    : cityIdx    >= 0 && cols[cityIdx]    ? cols[cityIdx]    : null,
+                    country_code: countryIdx >= 0 && cols[countryIdx] ? cols[countryIdx].substring(0, 3) : null,
+                    address : addressIdx >= 0 && cols[addressIdx] ? cols[addressIdx] : null
+                };
+
+                await INSERT.into(Suppliers).entries(newSupplier);
+                created++;
+            } catch (err) {
+                errors++;
+            }
+        }
+
+        return { created, updated: 0, errors };
+    });
 });

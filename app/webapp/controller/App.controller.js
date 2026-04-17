@@ -1,7 +1,8 @@
 sap.ui.define([
 	"./BaseController",
-	"sap/ui/model/json/JSONModel"
-], function (BaseController, JSONModel) {
+	"sap/ui/model/json/JSONModel",
+	"sap/m/MessageBox"
+], function (BaseController, JSONModel, MessageBox) {
 	"use strict";
 
 	return BaseController.extend("com.abics.casestudy.controller.App", {
@@ -33,7 +34,32 @@ sap.ui.define([
 
 		onNavItemSelect: function (oEvent) {
 			var sKey = oEvent.getSource().getKey();
-			this.getOwnerComponent().getRouter().navTo(sKey);
+			var oRouter = this.getOwnerComponent().getRouter();
+			var oModel = this.getOwnerComponent().getModel();
+
+			var bHasChanges = false;
+			try {
+				if (oModel && typeof oModel.hasPendingChanges === "function") {
+					bHasChanges = oModel.hasPendingChanges("productsGroup") || oModel.hasPendingChanges("suppliersGroup");
+				}
+			} catch (e) {
+				bHasChanges = false;
+			}
+
+			if (bHasChanges) {
+				var sMessage = this.getOwnerComponent().getModel("i18n").getProperty("unsavedChanges");
+				MessageBox.confirm(sMessage, {
+					onClose: function (sAction) {
+						if (sAction === MessageBox.Action.OK) {
+							oModel.resetChanges("productsGroup");
+							oModel.resetChanges("suppliersGroup");
+							oRouter.navTo(sKey);
+						}
+					}
+				});
+			} else {
+				oRouter.navTo(sKey);
+			}
 		}
 	});
 });

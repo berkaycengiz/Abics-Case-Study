@@ -1,0 +1,205 @@
+<mvc:View
+    controllerName="com.abics.casestudy.controller.Suppliers"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:data="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+    displayBlock="true">
+
+    <Page
+        id="supplierMasterPage"
+        showHeader="true"
+        showFooter="{suppliers>/isInlineEditing}">
+
+        <customHeader>
+            <Bar>
+                <contentLeft>
+                    <Title text="{i18n>suppliersTitle} ({= ${suppliers>/count}})" level="H3"/>
+                </contentLeft>
+                <contentRight>
+                    <SearchField
+                        id="supplierSearchField"
+                        width="12rem"
+                        placeholder="{i18n>search}"
+                        liveChange=".onSearch"/>
+                    <Button
+                        id="supplierAddRowBtn"
+                        text="{i18n>create}"
+                        type="Emphasized"
+                        icon="sap-icon://add"
+                        press=".onAddRow"/>
+                    <Button
+                        id="supplierDeleteBtn"
+                        text="{i18n>delete}"
+                        type="Reject"
+                        icon="sap-icon://delete"
+                        enabled="{suppliers>/hasSelection}"
+                        press=".onDeleteSelected"/>
+                    <Button
+                        text="{i18n>csvUpload}"
+                        icon="sap-icon://upload"
+                        press=".onOpenCsvDialog"/>
+                </contentRight>
+            </Bar>
+        </customHeader>
+
+        <content>
+            <Table
+                id="supplierTable"
+                items="{
+                    path: '/Suppliers',
+                    parameters: {
+                        $$updateGroupId: 'suppliersGroup',
+                        $orderby: 'createdAt desc',
+                        $expand: 'country',
+                        $count: true
+                    },
+                    events: {
+                        dataReceived: '.onDataReceived'
+                    }
+                }"
+                mode="MultiSelect"
+                selectionChange=".onSelectionChange"
+                growing="true"
+                growingThreshold="20"
+                growingScrollToLoad="true"
+                sticky="ColumnHeaders,HeaderToolbar"
+                noDataText="{i18n>noSuppliers}">
+
+                <columns>
+                    <Column hAlign="Begin">
+                        <header>
+                            <Button text="{i18n>colName}" press=".onSort" data:column="name" type="Transparent" iconFirst="false" icon="{= ${suppliers>/sortColumn} === 'name' ? (${suppliers>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Tablet">
+                        <header>
+                            <Button text="{i18n>supplierEmail}" press=".onSort" data:column="email" type="Transparent" iconFirst="false" icon="{= ${suppliers>/sortColumn} === 'email' ? (${suppliers>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Tablet">
+                        <header>
+                            <Button text="{i18n>supplierPhone}" press=".onSort" data:column="phone" type="Transparent" iconFirst="false" icon="{= ${suppliers>/sortColumn} === 'phone' ? (${suppliers>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Tablet">
+                        <header>
+                            <Button text="{i18n>supplierAddress}" press=".onSort" data:column="address" type="Transparent" iconFirst="false" icon="{= ${suppliers>/sortColumn} === 'address' ? (${suppliers>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>                    
+                    <Column hAlign="Begin" minScreenWidth="Small">
+                        <header>
+                            <Button text="{i18n>supplierCity}" press=".onSort" data:column="city" type="Transparent" iconFirst="false" icon="{= ${suppliers>/sortColumn} === 'city' ? (${suppliers>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Begin" minScreenWidth="Tablet">
+                        <header>
+                            <Button text="{i18n>supplierCountry}" press=".onSort" data:column="country/name" type="Transparent" iconFirst="false" icon="{= ${suppliers>/sortColumn} === 'country/name' ? (${suppliers>/sortDescending} ? 'sap-icon://sort-descending' : 'sap-icon://sort-ascending') : '' }" class="headerBtn" />
+                        </header>
+                    </Column>
+                    <Column hAlign="Center" width="6rem">
+                        <header>
+                            <Label text="{i18n>colActions}" design="Bold"/>
+                        </header>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Inactive">
+                        <cells>
+                            <!-- Name -->
+                            <VBox justifyContent="Center">
+                                <Text text="{name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Input
+                                    value="{name}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    valueLiveUpdate="true"
+                                    valueStateText="{i18n>fieldRequired}"
+                                    change=".onFieldChange"/>
+                            </VBox>
+
+                            <!-- Email -->
+                            <VBox justifyContent="Center">
+                                <Link text="{email}" href="mailto:{email}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Input
+                                    value="{email}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    type="Email"/>
+                            </VBox>
+
+                            <!-- Phone -->
+                            <VBox justifyContent="Center">
+                                <Text text="{phone}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Input
+                                    value="{phone}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    type="Tel"/>
+                            </VBox>
+
+                            <VBox justifyContent="Center">
+                                <Text text="{address}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Input
+                                    value="{address}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"/>
+                            </VBox>
+
+                            <!-- City -->
+                            <VBox justifyContent="Center">
+                                <Text text="{city}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Input
+                                    value="{city}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"/>
+                            </VBox>
+
+                            <VBox justifyContent="Center">
+                                <Text text="{country/name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <ComboBox
+                                    selectedKey="{country_code}"
+                                    visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
+                                    change=".onFieldChange"
+                                    items="{
+                                        path: 'suppliers>/countries',
+                                        templateShareable: false
+                                    }">
+                                    <core:Item key="{suppliers>code}" text="{suppliers>name} - {suppliers>code}"/>
+                                </ComboBox>
+                            </VBox>
+
+                            <!-- Actions -->
+                            <HBox justifyContent="Center">
+                                <Button
+                                    icon="sap-icon://detail-view"
+                                    type="Transparent"
+                                    tooltip="{i18n>viewDetail}"
+                                    press=".onRowPress"/>
+                                <Button
+                                    icon="sap-icon://edit"
+                                    type="Transparent"
+                                    tooltip="{i18n>edit}"
+                                    press=".onEditRow"/>
+                            </HBox>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+
+            </Table>
+        </content>
+
+        <footer>
+            <OverflowToolbar>
+                <ToolbarSpacer/>
+                <Button
+                    id="supplierSaveBtn"
+                    text="{i18n>save}"
+                    type="Accept"
+                    icon="sap-icon://save"
+                    press=".onSave"/>
+                <Button
+                    id="supplierCancelBtn"
+                    text="{i18n>cancel}"
+                    press=".onCancel"/>
+            </OverflowToolbar>
+        </footer>
+    </Page>
+
+</mvc:View>

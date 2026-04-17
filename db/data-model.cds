@@ -14,7 +14,7 @@ entity Products: cuid, managed {
 entity Suppliers : cuid, managed {
     name: String(100) @mandatory;
     city: String(100);
-    country: Country;
+    country: Country @mandatory;
     email: String(255) @assert.format: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     address: String(250);
     phone: String(50);

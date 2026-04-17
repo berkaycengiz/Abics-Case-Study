@@ -7,6 +7,9 @@ service ProductService {
     @readonly
     entity Currencies as projection on sap.common.Currencies;
 
+    @readonly
+    entity Countries as projection on sap.common.Countries;
+
 
     action validateProductsCsv(csvContent: LargeString) returns {
         valid   : Boolean;
@@ -18,6 +21,21 @@ service ProductService {
     };
 
     action uploadProductsCsv(csvContent: LargeString) returns {
+        created : Integer;
+        updated : Integer;
+        errors  : Integer;
+    };
+
+    action validateSuppliersCsv(csvContent: LargeString) returns {
+        valid   : Boolean;
+        errors  : array of {
+            row     : Integer;
+            column  : String;
+            message : String;
+        };
+    };
+
+    action uploadSuppliersCsv(csvContent: LargeString) returns {
         created : Integer;
         updated : Integer;
         errors  : Integer;

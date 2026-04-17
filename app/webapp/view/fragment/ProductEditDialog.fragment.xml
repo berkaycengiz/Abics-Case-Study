@@ -12,47 +12,45 @@
                 labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12">
                 
                 <Label text="{i18n>colName}" required="true"/>
-                <Input id="editName" value="{name}" valueStateText="{i18n>fieldRequired}"/>
+                <Input id="productEditName" value="{editModel>/name}" valueStateText="{i18n>fieldRequired}"/>
 
                 <Label text="{i18n>colDescription}"/>
-                <Input id="editDescription" value="{description}"/>
+                <Input id="productEditDescription" value="{editModel>/description}"/>
 
                 <Label text="{i18n>colPrice}"/>
                 <Input 
-                    id="editPrice"
+                    id="productEditPrice"
                     value="{
-                        path: 'price',
+                        path: 'editModel>/price',
                         type: 'sap.ui.model.odata.type.Decimal',
                         constraints: { precision: 15, scale: 2 }
                     }"
                     valueStateText="{i18n>priceMustBePositive}"/>
 
                 <Label text="{i18n>colCurrency}" required="true"/>
-                <Select
-                    id="editCurrency"
-                    selectedKey="{currency_code}"
-                    forceSelection="false"
+                <ComboBox
+                    id="productEditCurrency"
+                    selectedKey="{editModel>/currency_code}"
                     items="{
                         path: 'products>/currencies',
                         templateShareable: false
                     }">
                     <core:Item key="{products>code}" text="{products>code} - {products>name}"/>
-                </Select>
+                </ComboBox>
 
                 <Label text="{i18n>colStock}"/>
-                <Input id="editStocks" value="{stocks}" type="Number" valueStateText="{i18n>stocksMustBePositive}"/>
+                <Input id="productEditStocks" value="{editModel>/stocks}" type="Number" valueStateText="{i18n>stocksMustBePositive}"/>
 
                 <Label text="{i18n>colSupplier}" required="true"/>
-                <Select
-                    id="editSupplier"
-                    selectedKey="{supplier_ID}"
-                    forceSelection="false"
+                <ComboBox
+                    id="productEditSupplier"
+                    selectedKey="{editModel>/supplier_ID}"
                     items="{
                         path: 'products>/suppliers',
                         templateShareable: false
                     }">
                     <core:Item key="{products>ID}" text="{products>name}"/>
-                </Select>
+                </ComboBox>
 
             </f:SimpleForm>
         </content>

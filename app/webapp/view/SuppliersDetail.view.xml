@@ -1,0 +1,99 @@
+<mvc:View
+    controllerName="com.abics.casestudy.controller.Suppliers"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:fi="sap.f.semantic"
+    xmlns:form="sap.ui.layout.form"
+    displayBlock="true">
+
+    <fi:SemanticPage id="supplierDetailPage" headerPinnable="false" toggleHeaderOnTitleClick="false">
+
+        <fi:titleHeading>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{name}" level="H2"/>
+                </f:heading>
+                <f:actions>
+                    <Button
+                        text="{i18n>edit}"
+                        icon="sap-icon://edit"
+                        type="Emphasized"
+                        press=".onOpenEditDialog"/>
+                    <Button
+                        icon="sap-icon://decline"
+                        type="Transparent"
+                        press=".onCloseDetail"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </fi:titleHeading>
+
+        <fi:content>
+            <VBox class="sapUiContentPadding">
+
+                <Panel headerText="{i18n>supplierDetailInfo}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+                    <content>
+                        <form:SimpleForm
+                            editable="false"
+                            layout="ResponsiveGridLayout">
+
+                            <Label text="{i18n>colName}"/>
+                            <Text text="{name}"/>
+
+                            <Label text="{i18n>supplierEmail}"/>
+                            <Link text="{email}" href="mailto:{email}"/>
+
+                            <Label text="{i18n>supplierPhone}"/>
+                            <Text text="{phone}"/>
+
+                            <Label text="{i18n>supplierAddress}"/>
+                            <Text text="{address}"/>
+
+                            <Label text="{i18n>supplierCity}"/>
+                            <Text text="{city}"/>
+
+                            <Label text="{i18n>supplierCountry}"/>
+                            <Text text="{country/name}"/>
+
+                        </form:SimpleForm>
+                    </content>
+                </Panel>
+
+                <List
+                    id="supplierProductsList"
+                    items="{products}"
+                    noDataText="{i18n>noProductsFound}"
+                    showSeparators="Inner"
+                    updateFinished=".onSupplierProductsUpdateFinished"
+                    class="sapUiSmallMarginBottom"
+                    backgroundDesign="Solid">
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Title text="{i18n>supplierProducts}" level="H3"/>
+                            <ToolbarSpacer />
+                            <Text id="supplierProductsCountText" text="" class="sapUiSmallMarginEnd" />
+                        </OverflowToolbar>
+                    </headerToolbar>
+                    <ObjectListItem
+                        title="{name}"
+                        icon="sap-icon://product"
+                        number="{path: 'price', type: 'sap.ui.model.type.Float', formatOptions: { minFractionDigits: 2 }}"
+                        numberUnit="{currency_code}"
+                        type="Inactive">
+                        <attributes>
+                            <ObjectAttribute text="{description}" />
+                        </attributes>
+                        <firstStatus>
+                            <ObjectStatus
+                                text="{i18n>colStock}: {stocks}"
+                                state="{= ${stocks} >= 25 ? 'Success' : (${stocks} >= 10 ? 'Warning' : 'Error') }" />
+                        </firstStatus>
+                    </ObjectListItem>
+                </List>
+
+            </VBox>
+        </fi:content>
+
+    </fi:SemanticPage>
+
+</mvc:View>

@@ -4,7 +4,7 @@
     xmlns:u="sap.ui.unified">
     
     <Dialog 
-        id="productCsvDialog" 
+        id="supplierCsvDialog" 
         title="{i18n>csvUpload}" 
         contentWidth="36rem"
         resizable="true"
@@ -14,7 +14,7 @@
             <VBox class="sapUiMediumMargin">
                 
                 <MessageStrip
-                    text="{i18n>csvInstructions}"
+                    text="{i18n>supplierCsvInstructions}"
                     type="Information"
                     showIcon="true"
                     class="sapUiSmallMarginBottom"/>
@@ -22,7 +22,7 @@
                 <Label text="{i18n>selectFile}" class="sapUiSmallMarginBottom"/>
                 
                 <u:FileUploader
-                    id="productCsvFileUploader"
+                    id="supplierCsvFileUploader"
                     width="100%"
                     fileType="csv"
                     mimeType="text/csv,application/vnd.ms-excel"
@@ -30,7 +30,7 @@
                     change=".onCsvFileChange"
                     class="sapUiSmallMarginBottom"/>
 
-                <VBox id="productCsvValidationResults" visible="false" class="sapUiSmallMarginTop">
+                <VBox id="supplierCsvValidationResults" visible="false" class="sapUiSmallMarginTop">
                     <Text
                         text="{= ${csvResult>/fileName} + ' (' + ${csvResult>/totalRows} + ' rows)'}"
                         class="sapUiSmallMarginBottom sapUiSmallText"/>
@@ -51,7 +51,7 @@
                     </List>
                     
                     <Panel
-                        id="productCsvErrorPanel"
+                        id="supplierCsvErrorPanel"
                         visible="false"
                         headerText="{i18n>validationResults}"
                         expandable="true"
@@ -74,7 +74,7 @@
 
         <beginButton>
             <Button
-                id="productUploadCsvBtn"
+                id="uploadSupplierCsvBtn"
                 text="{i18n>upload}"
                 type="Emphasized"
                 icon="sap-icon://upload"

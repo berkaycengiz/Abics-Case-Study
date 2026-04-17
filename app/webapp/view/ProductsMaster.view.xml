@@ -18,7 +18,7 @@
                 </contentLeft>
                 <contentRight>
                     <SearchField
-                        id="searchField"
+                        id="productSearchField"
                         width="12rem"
                         placeholder="{i18n>search}"
                         liveChange=".onSearch"/>
@@ -28,13 +28,13 @@
                         tooltip="{i18n>filter}"
                         press=".onOpenFilterDialog"/>
                     <Button
-                        id="addRowBtn"
+                        id="productAddRowBtn"
                         text="{i18n>create}"
                         type="Emphasized"
                         icon="sap-icon://add"
                         press=".onAddRow"/>
                     <Button
-                        id="deleteBtn"
+                        id="productDeleteBtn"
                         text="{i18n>delete}"
                         type="Reject"
                         icon="sap-icon://delete"
@@ -50,13 +50,13 @@
 
         <content>
             <OverflowToolbar 
-                id="activeFiltersBar" 
+                id="productActiveFiltersBar" 
                 visible="{products>/hasActiveFilters}" 
                 class="sapUiSmallPadding">
                 
                 <content>
                     <Label text="{i18n>activeFilters}:" class="sapUiTinyMarginBegin"/>
-                    <HBox id="filterTokens" gap="0.5rem" wrap="Wrap" alignItems="Center" class="sapUiTinyMarginBegin"/>
+                    <HBox id="productFilterTokens" gap="0.5rem" wrap="Wrap" alignItems="Center" class="sapUiTinyMarginBegin"/>
                     <Button
                         text="{i18n>clearAllFilters}"
                         type="Emphasized"
@@ -66,7 +66,7 @@
             </OverflowToolbar>
 
             <Table
-                id="productsTable"
+                id="productTable"
                 items="{
                     path: '/Products',
                     parameters: {
@@ -160,16 +160,15 @@
 
                             <VBox justifyContent="Center">
                                 <Text text="{currency_code}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
-                                <Select
+                                <ComboBox
                                     selectedKey="{currency_code}"
-                                    forceSelection="false"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
                                     items="{
                                         path: 'products>/currencies',
                                         templateShareable: false
                                     }">
                                     <core:Item key="{products>code}" text="{products>code} - {products>name}"/>
-                                </Select>
+                                </ComboBox>
                             </VBox>
 
                             <VBox justifyContent="Center">
@@ -189,16 +188,16 @@
                                     ],
                                     formatter: '.formatSupplierName'
                                 }" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
-                                <Select
+                                <ComboBox
+                                    id="productSupplierComboBox"
                                     selectedKey="{supplier_ID}"
-                                    forceSelection="false"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'products>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
                                     items="{
                                         path: 'products>/suppliers',
                                         templateShareable: false
                                     }">
                                     <core:Item key="{products>ID}" text="{products>name}"/>
-                                </Select>
+                                </ComboBox>
                             </VBox>
 
                             <HBox justifyContent="Center">

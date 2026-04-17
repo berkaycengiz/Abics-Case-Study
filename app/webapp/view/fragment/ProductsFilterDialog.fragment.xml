@@ -3,7 +3,7 @@
     xmlns:core="sap.ui.core">
 
     <Dialog
-        id="filterDialog"
+        id="productFilterDialog"
         title="{i18n>filterProducts}"
         contentWidth="28rem"
         resizable="true"
@@ -12,29 +12,29 @@
         <content>
             <VBox class="sapUiContentPadding sapUiMediumMarginBeginEnd">
                 <Label text="{i18n>colCurrency}" class="sapUiSmallMarginTop"/>
-                <Select id="currencyFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'products>/filterCurrencies', templateShareable: false }">
+                <ComboBox id="productCurrencyFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'products>/filterCurrencies', templateShareable: false }">
                     <items>
                         <core:Item key="{products>code}" text="{products>code} {products>name}"/>
                     </items>
-                </Select>
+                </ComboBox>
 
                 <Label text="{i18n>colSupplier}" class=""/>
-                <Select id="supplierFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'products>/filterSuppliers', templateShareable: false }">
+                <ComboBox id="productSupplierFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'products>/filterSuppliers', templateShareable: false }">
                     <items>
                         <core:Item key="{products>ID}" text="{products>name}"/>
                     </items>
-                </Select>
+                </ComboBox>
 
                 <Label text="{i18n>priceRange}" class=""/>
                 <HBox width="100%" justifyContent="SpaceBetween" gap="2rem" class="sapUiSmallMarginBottom">
-                    <Input id="priceFrom" placeholder="{i18n>from}" type="Number"/>
-                    <Input id="priceTo" placeholder="{i18n>to}" type="Number"/>
+                    <Input id="productPriceFrom" placeholder="{i18n>from}" type="Number"/>
+                    <Input id="productPriceTo" placeholder="{i18n>to}" type="Number"/>
                 </HBox>
 
                 <Label text="{i18n>stockRange}" class=""/>
                 <HBox width="100%" justifyContent="SpaceBetween" gap="2rem" class="sapUiSmallMarginBottom">
-                    <Input id="stocksFrom" placeholder="{i18n>from}" type="Number"/>
-                    <Input id="stocksTo" placeholder="{i18n>to}" type="Number"/>
+                    <Input id="productStocksFrom" placeholder="{i18n>from}" type="Number"/>
+                    <Input id="productStocksTo" placeholder="{i18n>to}" type="Number"/>
                 </HBox>
 
             </VBox>

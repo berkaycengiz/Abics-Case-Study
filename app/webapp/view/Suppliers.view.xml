@@ -1,0 +1,20 @@
+<mvc:View
+    controllerName="com.abics.casestudy.controller.Suppliers"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    displayBlock="true">
+
+    <f:FlexibleColumnLayout id="supplierFCL" layout="OneColumn">
+
+        <f:beginColumnPages>
+            <mvc:XMLView viewName="com.abics.casestudy.view.SuppliersMaster" id="supplierMasterView"/>
+        </f:beginColumnPages>
+
+        <f:midColumnPages>
+            <mvc:XMLView viewName="com.abics.casestudy.view.SuppliersDetail" id="supplierDetailView"/>
+        </f:midColumnPages>
+
+    </f:FlexibleColumnLayout>
+
+</mvc:View>
