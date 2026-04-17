@@ -370,6 +370,20 @@ sap.ui.define([
                 }
             }
 
+            // Phone Validation (Digits only)
+            var oPhoneInput = this.byId("supplierEditPhone") || sap.ui.getCore().byId(sViewId + "--supplierEditPhone");
+            if (oPhoneInput) {
+                var sPhone = oPhoneInput.getValue();
+                var oPhoneRegex = /^\d+$/;
+                if (sPhone && sPhone.trim() !== "" && !oPhoneRegex.test(sPhone)) {
+                    oPhoneInput.setValueState("Error");
+                    oPhoneInput.setValueStateText(this._i18n("invalidPhoneFormat"));
+                    bValid = false;
+                } else {
+                    oPhoneInput.setValueState("None");
+                }
+            }
+
             // Country Validation
             var oCountrySelect = sap.ui.getCore().byId(sViewId + "--supplierEditCountry");
             if (oCountrySelect) {
@@ -480,6 +494,21 @@ sap.ui.define([
                         bValid = false;
                     } else {
                         oEmailInput.setValueState("None");
+                    }
+                }
+
+                // Inline editing Phone validation
+                var oPhoneVBox = aCells[2]; // Index 2 is Phone
+                var oPhoneInput = oPhoneVBox && oPhoneVBox.getItems ? oPhoneVBox.getItems().find(c => c.isA("sap.m.Input")) : null;
+                if (oPhoneInput) {
+                    var sPhone = oPhoneInput.getValue();
+                    var oPhoneRegex = /^\d+$/;
+                    if (sPhone && sPhone.trim() !== "" && !oPhoneRegex.test(sPhone)) {
+                        oPhoneInput.setValueState("Error");
+                        oPhoneInput.setValueStateText(this._i18n("invalidPhoneFormat"));
+                        bValid = false;
+                    } else {
+                        oPhoneInput.setValueState("None");
                     }
                 }
             });
@@ -674,6 +703,19 @@ sap.ui.define([
         onCsvDialogClose: function () {
             this._oCsvDialog.close();
             this._sCsvContent = null;
+        },
+
+        formatCountryName: function (sCode, aCountries, sOriginalName) {
+            if (!sCode) {
+                return sOriginalName || "";
+            }
+            if (aCountries && aCountries.length > 0) {
+                const oCountry = aCountries.find(c => c.code === sCode);
+                if (oCountry) {
+                    return oCountry.name;
+                }
+            }
+            return sOriginalName || "";
         },
 
         _i18n: function (sKey, aArgs) {

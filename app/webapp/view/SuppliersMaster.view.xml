@@ -133,7 +133,8 @@
                                 <Input
                                     value="{phone}"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
-                                    type="Tel"/>
+                                    type="Text"
+                                    liveChange=".onFieldChange"/>
                             </VBox>
 
                             <VBox justifyContent="Center">
@@ -152,7 +153,14 @@
                             </VBox>
 
                             <VBox justifyContent="Center">
-                                <Text text="{country/name}" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
+                                <Text text="{
+                                    parts: [
+                                        {path: 'country_code'},
+                                        {path: 'suppliers>/countries'},
+                                        {path: 'country/name'}
+                                    ],
+                                    formatter: '.formatCountryName'
+                                }" visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowReadonly'}" class="sapUiTinyMarginTopBottom" />
                                 <ComboBox
                                     selectedKey="{country_code}"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
