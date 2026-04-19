@@ -1,16 +1,19 @@
 sap.ui.define([
-    "sap/ui/core/mvc/Controller",
+    "./BaseController",
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/ui/model/Sorter",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
-    "sap/base/strings/formatMessage"
-], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageBox, MessageToast, formatMessage) {
+    "sap/base/strings/formatMessage",
+    "sap/ui/export/library"
+], function (BaseController, JSONModel, Filter, FilterOperator, Sorter, MessageBox, MessageToast, formatMessage, exportLibrary) {
     "use strict";
 
-    return Controller.extend("com.abics.casestudy.controller.Suppliers", {
+    const EdmType = exportLibrary.EdmType;
+
+    return BaseController.extend("com.abics.casestudy.controller.Suppliers", {
 
         onInit: function () {
             this._oUIModel = new JSONModel({
@@ -28,6 +31,9 @@ sap.ui.define([
 
             this._aSorters = [];
             this._aSearchFilters = [];
+            this._aFilters = [];
+            this._aActiveFilterTokens = [];
+            this._oUIModel.setProperty("/hasActiveFilters", false);
 
             this._loadCountries();
 
@@ -65,7 +71,7 @@ sap.ui.define([
         _getTable: function () {
             var oTable = this.byId("supplierTable");
             if (!oTable) {
-                // If not found in current view (e.g. called from Detail), search in Master view
+                
                 var oFCL = this._getFCL();
                 if (oFCL) {
                     var aBeginPages = oFCL.getBeginColumnPages();
@@ -112,9 +118,7 @@ sap.ui.define([
                 this._aSearchFilters = [new Filter({
                     filters: [
                         new Filter({ path: "name",    operator: FilterOperator.Contains, value1: sQuery, caseSensitive: false }),
-                        new Filter({ path: "city",    operator: FilterOperator.Contains, value1: sQuery, caseSensitive: false }),
-                        new Filter({ path: "email",   operator: FilterOperator.Contains, value1: sQuery, caseSensitive: false }),
-                        new Filter({ path: "address", operator: FilterOperator.Contains, value1: sQuery, caseSensitive: false })
+                        new Filter({ path: "email",   operator: FilterOperator.Contains, value1: sQuery, caseSensitive: false })
                     ],
                     and: false
                 })];
@@ -125,11 +129,95 @@ sap.ui.define([
         },
 
         _applyFilters: function () {
-            if (this._aSearchFilters.length > 0) {
-                this._getBinding().filter(new Filter({ filters: this._aSearchFilters, and: false }));
+            const aAllFilters = [...this._aSearchFilters, ...this._aFilters];
+            if (aAllFilters.length > 0) {
+                this._getBinding().filter(new Filter({ filters: aAllFilters, and: true }));
             } else {
                 this._getBinding().filter([]);
             }
+        },
+
+        onOpenFilterDialog: function () {
+            if (!this._oFilterDialog) {
+                this._oFilterDialog = sap.ui.xmlfragment(
+                    this.getView().getId(),
+                    "com.abics.casestudy.view.fragment.SuppliersFilterDialog",
+                    this
+                );
+                this.getView().addDependent(this._oFilterDialog);
+            }
+            this._oFilterDialog.open();
+        },
+
+        onConfirmFilter: function () {
+            const aFilters = [];
+            const aTokens = [];
+
+            const oCountrySelect = this.byId("supplierCountryFilter");
+            if (oCountrySelect && oCountrySelect.getSelectedKey()) {
+                const sCode = oCountrySelect.getSelectedKey();
+                const sName = oCountrySelect.getSelectedItem().getText().split(" - ")[0];
+                aFilters.push(new Filter("country_code", FilterOperator.EQ, sCode));
+                aTokens.push({ key: "country_code", text: this._i18n("supplierCountry") + ": " + sName });
+            }
+
+            const oCityInput = this.byId("supplierCityFilter");
+            if (oCityInput && oCityInput.getValue()) {
+                const sCity = oCityInput.getValue().trim();
+                aFilters.push(new Filter({
+                    path: "city",
+                    operator: FilterOperator.Contains,
+                    value1: sCity,
+                    caseSensitive: false
+                }));
+                aTokens.push({ key: "city", text: this._i18n("supplierCity") + ": " + sCity });
+            }
+
+            this._aFilters = aFilters;
+            this._aActiveFilterTokens = aTokens;
+            this._oUIModel.setProperty("/hasActiveFilters", aTokens.length > 0);
+            this._renderFilterTokens(aTokens);
+            this._applyFilters();
+            this._oFilterDialog.close();
+        },
+
+        onCloseFilterDialog: function () {
+            this._oFilterDialog.close();
+        },
+
+        onResetFilters: function () {
+            this.byId("supplierCountryFilter").setSelectedKey("");
+            this.byId("supplierCityFilter").setValue("");
+        },
+
+        onClearAllFilters: function () {
+            this._aFilters = [];
+            this._aActiveFilterTokens = [];
+            this._oUIModel.setProperty("/hasActiveFilters", false);
+            this._renderFilterTokens([]);
+            this._applyFilters();
+        },
+
+        _renderFilterTokens: function (aTokens) {
+            const oTokensBox = this.byId("supplierFilterTokens");
+            if (!oTokensBox) return;
+            oTokensBox.destroyItems();
+            aTokens.forEach(t => {
+                oTokensBox.addItem(new sap.m.Token({ 
+                    key: t.key, 
+                    text: t.text, 
+                    delete: this._onRemoveToken.bind(this) 
+                }));
+            });
+        },
+
+        _onRemoveToken: function (oEvent) {
+            const sKey = oEvent.getSource().getKey();
+            this._aActiveFilterTokens = this._aActiveFilterTokens.filter(t => t.key !== sKey);
+            this._aFilters = this._aFilters.filter(f => f.sPath !== sKey);
+            this._oUIModel.setProperty("/hasActiveFilters", this._aActiveFilterTokens.length > 0);
+            this._renderFilterTokens(this._aActiveFilterTokens);
+            this._applyFilters();
         },
 
         onSort: function (oEvent) {
@@ -180,7 +268,7 @@ sap.ui.define([
                 name: "",
                 email: "",
                 phone: "",
-                country_code: sDefaultCountry, // Set default country
+                country_code: sDefaultCountry, 
                 city: "",
                 address: ""
             }, false, false);
@@ -219,7 +307,7 @@ sap.ui.define([
             var oDetailView = this._getDetailView();
 
             if (oDetailView) {
-                // Use bindElement to fetch products explicitly for this supplier
+                
                 oDetailView.bindElement({
                     path: oContext.getPath(),
                     parameters: {
@@ -293,7 +381,6 @@ sap.ui.define([
                 this.getView().addDependent(this._oEditDialog);
             }
 
-            // Create buffer model for isolated editing
             var oData = oContext.getObject();
             var oEditModel = new JSONModel({
                 name: oData.name || "",
@@ -304,8 +391,7 @@ sap.ui.define([
                 address: oData.address || ""
             });
             this._oEditDialog.setModel(oEditModel, "editModel");
-            
-            // Still set context so fragment can use it for labels or other read-only info if needed
+
             this._oEditDialog.setBindingContext(oContext);
             this._oEditDialog.open();
         },
@@ -321,7 +407,7 @@ sap.ui.define([
             var oEditData = this._oEditDialog.getModel("editModel").getData();
 
             if (oContext) {
-                // Sync changes back to OData context
+                
                 Object.keys(oEditData).forEach(function (sProp) {
                     if (oContext.getProperty(sProp) !== oEditData[sProp]) {
                         oContext.setProperty(sProp, oEditData[sProp]);
@@ -331,7 +417,7 @@ sap.ui.define([
 
             this._oODataModel.submitBatch("suppliersGroup").then(() => {
                 MessageToast.show(this._i18n("saveSuccess"));
-                this._getBinding().refresh(); // Refresh master table
+                this._getBinding().refresh(); 
                 if (this._oEditDialog) {
                     this._oEditDialog.close();
                 }
@@ -344,7 +430,6 @@ sap.ui.define([
             var bValid = true;
             var sViewId = this.getView().getId();
 
-            // Name Validation
             var oNameInput = sap.ui.getCore().byId(sViewId + "--supplierEditName");
             if (oNameInput) {
                 if (!oNameInput.getValue() || oNameInput.getValue().trim() === "") {
@@ -356,12 +441,16 @@ sap.ui.define([
                 }
             }
 
-            // Email Validation (Regex from CDS)
-            var oEmailInput = sap.ui.getCore().byId(sViewId + "--supplierEditEmail");
+            var oEmailInput = this.byId("supplierEditEmail") || sap.ui.getCore().byId(sViewId + "--supplierEditEmail");
             if (oEmailInput) {
                 var sEmail = oEmailInput.getValue();
                 var oEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                if (sEmail && !oEmailRegex.test(sEmail)) {
+                
+                if (!sEmail || sEmail.trim() === "") {
+                    oEmailInput.setValueState("Error");
+                    oEmailInput.setValueStateText(this._i18n("fieldRequired"));
+                    bValid = false;
+                } else if (!oEmailRegex.test(sEmail)) {
                     oEmailInput.setValueState("Error");
                     oEmailInput.setValueStateText(this._i18n("invalidEmailFormat"));
                     bValid = false;
@@ -370,7 +459,6 @@ sap.ui.define([
                 }
             }
 
-            // Phone Validation (Digits only)
             var oPhoneInput = this.byId("supplierEditPhone") || sap.ui.getCore().byId(sViewId + "--supplierEditPhone");
             if (oPhoneInput) {
                 var sPhone = oPhoneInput.getValue();
@@ -384,7 +472,6 @@ sap.ui.define([
                 }
             }
 
-            // Country Validation
             var oCountrySelect = sap.ui.getCore().byId(sViewId + "--supplierEditCountry");
             if (oCountrySelect) {
                 if (!oCountrySelect.getSelectedKey()) {
@@ -469,8 +556,7 @@ sap.ui.define([
                     }
                 }
 
-                // Inline editing Country Validation
-                var oCountryVBox = aCells[5]; // Correct index for Country Column
+                var oCountryVBox = aCells[5]; 
                 var oCountrySelect = oCountryVBox && oCountryVBox.getItems ? oCountryVBox.getItems().find(c => c.isA("sap.m.ComboBox")) : null;
                 if (oCountrySelect) {
                     if (!oCountrySelect.getSelectedKey()) {
@@ -482,13 +568,17 @@ sap.ui.define([
                     }
                 }
 
-                // Inline editing Email validation
-                var oEmailVBox = aCells[1]; // Correct index for Email Column
+                var oEmailVBox = aCells[1]; 
                 var oEmailInput = oEmailVBox && oEmailVBox.getItems ? oEmailVBox.getItems().find(c => c.isA("sap.m.Input")) : null;
                 if (oEmailInput) {
                     var sEmail = oEmailInput.getValue();
                     var oEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                    if (sEmail && !oEmailRegex.test(sEmail)) {
+
+                    if (!sEmail || sEmail.trim() === "") {
+                        oEmailInput.setValueState("Error");
+                        oEmailInput.setValueStateText(this._i18n("fieldRequired"));
+                        bValid = false;
+                    } else if (!oEmailRegex.test(sEmail)) {
                         oEmailInput.setValueState("Error");
                         oEmailInput.setValueStateText(this._i18n("invalidEmailFormat"));
                         bValid = false;
@@ -497,8 +587,7 @@ sap.ui.define([
                     }
                 }
 
-                // Inline editing Phone validation
-                var oPhoneVBox = aCells[2]; // Index 2 is Phone
+                var oPhoneVBox = aCells[2]; 
                 var oPhoneInput = oPhoneVBox && oPhoneVBox.getItems ? oPhoneVBox.getItems().find(c => c.isA("sap.m.Input")) : null;
                 if (oPhoneInput) {
                     var sPhone = oPhoneInput.getValue();
@@ -531,7 +620,7 @@ sap.ui.define([
                         this._oODataModel.resetChanges("suppliersGroup");
                         this._oUIModel.setProperty("/editingRows", []);
                         this._onModelChange();
-                        // Redundant refresh removed to let OData V4 handle the removal smoothly
+                        
                         this._oUIModel.refresh(true);
                     }
                 }
@@ -596,6 +685,19 @@ sap.ui.define([
             } else {
                 oControl.setValueState("None");
             }
+        },
+
+        onDownloadCsv: function () {
+            const aCols = [
+                { label: this._i18n("colName"), property: "name", type: EdmType.String },
+                { label: this._i18n("supplierEmail"), property: "email", type: EdmType.String },
+                { label: this._i18n("supplierPhone"), property: "phone", type: EdmType.String },
+                { label: this._i18n("supplierCity"), property: "city", type: EdmType.String },
+                { label: this._i18n("supplierCountry"), property: "country/name", type: EdmType.String },
+                { label: this._i18n("supplierAddress"), property: "address", type: EdmType.String }
+            ];
+
+            this._exportTable(this._getTable(), aCols, "Suppliers_" + new Date().getTime());
         },
 
         onOpenCsvDialog: function () {

@@ -12,6 +12,19 @@
             <tnt:ToolHeader>
                 <Button icon="sap-icon://menu2" type="Transparent" press=".onSideNavButtonPress" />
                 <Title text="{i18n>appHeaderTitle}" />
+                <ToolbarSpacer />
+                <Button
+                    id="themeBtn"
+                    icon="{= ${app>/isDark} ? 'sap-icon://light-mode' : 'sap-icon://dark-mode' }"
+                    type="Transparent"
+                    tooltip="{= ${app>/isDark} ? '{i18n>themeLight}' : '{i18n>themeDark}' }"
+                    press=".onThemeToggle" />
+                <Button
+                    id="langBtn"
+                    icon="sap-icon://world"
+                    type="Transparent"
+                    tooltip="{i18n>switchLanguage}"
+                    press=".onLanguageToggle" />
             </tnt:ToolHeader>
         </tnt:header>
         

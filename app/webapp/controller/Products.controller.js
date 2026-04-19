@@ -1,5 +1,5 @@
 sap.ui.define([
-    "sap/ui/core/mvc/Controller",
+    "./BaseController",
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
@@ -7,11 +7,14 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/f/library",
-    "sap/base/strings/formatMessage"
-], function (Controller, JSONModel, Filter, FilterOperator, Sorter, MessageBox, MessageToast, fioriLibrary, formatMessage) {
+    "sap/base/strings/formatMessage",
+    "sap/ui/export/library"
+], function (BaseController, JSONModel, Filter, FilterOperator, Sorter, MessageBox, MessageToast, fioriLibrary, formatMessage, exportLibrary) {
     "use strict";
 
-    return Controller.extend("com.abics.casestudy.controller.Products", {
+    const EdmType = exportLibrary.EdmType;
+
+    return BaseController.extend("com.abics.casestudy.controller.Products", {
         onInit: function () {
             this._oUIModel = new JSONModel({
                 layout: "OneColumn",
@@ -42,7 +45,6 @@ sap.ui.define([
 
             this._oODataModel.attachPropertyChange(this._onModelChange, this);
 
-            // Reset inline edit state when navigating away from products
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.attachRouteMatched(this._onRouteChanged, this);
         },
@@ -56,7 +58,7 @@ sap.ui.define([
         _onRouteChanged: function (oEvent) {
             var sRouteName = oEvent.getParameter("name");
             if (sRouteName !== "products" && sRouteName !== "productsDetail") {
-                // Leaving the products page — discard changes and exit edit mode
+                
                 if (this._oODataModel.hasPendingChanges("productsGroup")) {
                     this._oODataModel.resetChanges("productsGroup");
                 }
@@ -81,7 +83,6 @@ sap.ui.define([
                 const aSuppliers = aContexts.map(c => c.getObject());
                 this._oUIModel.setProperty("/suppliers", aSuppliers);
 
-                // For filter dialog, prepend 'All Suppliers' option
                 const aFilterSuppliers = [...aSuppliers];
                 aFilterSuppliers.unshift({ ID: "", name: this._i18n("allSuppliers") });
                 this._oUIModel.setProperty("/filterSuppliers", aFilterSuppliers);
@@ -98,7 +99,6 @@ sap.ui.define([
                 const aCurrencies = aContexts.map(c => c.getObject());
                 this._oUIModel.setProperty("/currencies", aCurrencies);
 
-                // For filter dialog, prepend 'All Currencies' option
                 const aFilterCurrencies = [...aCurrencies];
                 aFilterCurrencies.unshift({ code: "", name: this._i18n("allCurrencies") });
                 this._oUIModel.setProperty("/filterCurrencies", aFilterCurrencies);
@@ -110,7 +110,7 @@ sap.ui.define([
         _getTable: function () {
             var oTable = this.byId("productTable");
             if (!oTable) {
-                // If not found in current view (e.g. called from Detail), search in Master view
+                
                 var oFCL = this._getFCL();
                 if (oFCL) {
                     var aBeginPages = oFCL.getBeginColumnPages();
@@ -172,18 +172,18 @@ sap.ui.define([
 
             if (sCurrentSort === sColumn) {
                 if (!bCurrentDesc) {
-                    // 2. State: Ascending -> Descending
+                    
                     bNewDescending = true;
                     aSorters = [new Sorter(sColumn, true)];
                 } else {
-                    // 3. State: Descending -> None (Clear Sort)
+                    
                     sNewColumn = "";
                     bNewDescending = false;
-                    // Empty array lets OData V4 fall back to the XML default (createdAt desc)
+                    
                     aSorters = [];
                 }
             } else {
-                // 1. State: New Column -> Ascending
+                
                 bNewDescending = false;
                 aSorters = [new Sorter(sColumn, false)];
             }
@@ -224,7 +224,6 @@ sap.ui.define([
             const aFilters = [];
             const aTokens = [];
 
-            // Currency filter
             const oCurrSelect = this.byId("productCurrencyFilter");
             if (oCurrSelect && oCurrSelect.getSelectedKey()) {
                 const sCurr = oCurrSelect.getSelectedKey();
@@ -233,7 +232,6 @@ sap.ui.define([
                 aTokens.push({ key: "currency_code", text: this._i18n("currencyLabel") + ": " + sCurrText });
             }
 
-            // Supplier filter
             const oSupplierSelect = this.byId("productSupplierFilter");
             if (oSupplierSelect && oSupplierSelect.getSelectedKey()) {
                 const sSupp = oSupplierSelect.getSelectedKey();
@@ -242,7 +240,6 @@ sap.ui.define([
                 aTokens.push({ key: "supplier_ID", text: this._i18n("supplierLabel") + ": " + sSuppName });
             }
 
-            // Price range filter
             const oPriceFrom = this.byId("productPriceFrom");
             const oPriceTo = this.byId("productPriceTo");
             var sPriceFromVal = oPriceFrom ? oPriceFrom.getValue() : "";
@@ -263,7 +260,6 @@ sap.ui.define([
                 aTokens.push({ key: "price", text: this._i18n("priceMax", [fPriceTo]) });
             }
 
-            // Stock range filter
             const oStockFrom = this.byId("productStocksFrom");
             const oStockTo = this.byId("productStocksTo");
             var sStockFromVal = oStockFrom ? oStockFrom.getValue() : "";
@@ -333,6 +329,10 @@ sap.ui.define([
 
         onAddRow: function () {
             const oBinding = this._getBinding();
+
+            const aSuppliers = this._oUIModel.getProperty("/suppliers") || [];
+            const sFirstSupplierId = aSuppliers.length > 0 ? aSuppliers[0].ID : null;
+
             const sID = globalThis.crypto ? crypto.randomUUID() : Math.random().toString();
             const oContext = oBinding.create({
                 ID: sID,
@@ -341,7 +341,7 @@ sap.ui.define([
                 price: 0,
                 currency_code: "EUR",
                 stocks: 0,
-                supplier_ID: null
+                supplier_ID: sFirstSupplierId
             }, false, false);
 
             const aEditingRows = this._oUIModel.getProperty("/editingRows") || [];
@@ -372,8 +372,6 @@ sap.ui.define([
             const oSource = oEvent.getSource();
             let oContext = oSource.getBindingContext();
 
-            // Sometime HBox/Button might not have direct context depending on UI5 version,
-            // fallback to parent's binding context (ColumnListItem)
             if (!oContext && oSource.getParent) {
                 const oParent = oSource.getParent();
                 if (oParent && oParent.getBindingContext) {
@@ -393,8 +391,7 @@ sap.ui.define([
 
             if (oDetailView) {
                 console.log("[Products] Refreshing Detail View binding...");
-                // Just use the existing context from the table. 
-                // OData V4 will automatically detect missing properties (like supplier/name) and fetch them smartly!
+
                 oDetailView.setBindingContext(oContext);
             } else {
                 console.error("[Products] Detail view not found by _getDetailView!");
@@ -423,11 +420,10 @@ sap.ui.define([
                     "com.abics.casestudy.view.fragment.ProductEditDialog",
                     this
                 );
-                // We add it to the view as a dependent so it inherits its model
+                
                 this.getView().addDependent(this._oEditDialog);
             }
-            
-            // Create buffer model for isolated editing
+
             var oData = oContext.getObject();
             var oEditModel = new JSONModel({
                 name: oData.name || "",
@@ -454,7 +450,7 @@ sap.ui.define([
             var oEditData = this._oEditDialog.getModel("editModel").getData();
 
             if (oContext) {
-                // Sync changes back to OData context
+                
                 Object.keys(oEditData).forEach(function (sProp) {
                     if (oContext.getProperty(sProp) !== oEditData[sProp]) {
                         oContext.setProperty(sProp, oEditData[sProp]);
@@ -464,7 +460,7 @@ sap.ui.define([
 
             this._oODataModel.submitBatch("productsGroup").then(() => {
                 MessageToast.show(this._i18n("saveSuccess"));
-                this._getBinding().refresh(); // Refresh master table
+                this._getBinding().refresh(); 
                 if (this._oEditDialog) {
                     this._oEditDialog.close();
                 }
@@ -547,7 +543,7 @@ sap.ui.define([
             if (oContext) {
                 var oOriginalData = oContext.getObject();
                 bChanged = Object.keys(oEditData).some(function (sProp) {
-                    // Simple comparison for basic types
+                    
                     return oOriginalData[sProp] != oEditData[sProp];
                 });
             }
@@ -757,7 +753,7 @@ sap.ui.define([
                         this._oODataModel.resetChanges("productsGroup");
                         this._oUIModel.setProperty("/editingRows", []);
                         this._onModelChange();
-                        // Redundant refresh removed to let OData V4 handle the removal smoothly
+                        
                         this._oUIModel.refresh(true);
                     }
                 }
@@ -790,6 +786,18 @@ sap.ui.define([
             );
         },
 
+        onDownloadCsv: function () {
+            const aCols = [
+                { label: this._i18n("colName"), property: "name", type: EdmType.String },
+                { label: this._i18n("colDescription"), property: "description", type: EdmType.String },
+                { label: this._i18n("colPrice"), property: "price", type: EdmType.Number, scale: 2 },
+                { label: this._i18n("colCurrency"), property: "currency_code", type: EdmType.String },
+                { label: this._i18n("colStock"), property: "stocks", type: EdmType.Number },
+                { label: this._i18n("colSupplier"), property: "supplier/name", type: EdmType.String }
+            ];
+
+            this._exportTable(this._getTable(), aCols, "Products_" + new Date().getTime());
+        },
 
         onOpenCsvDialog: function () {
             if (!this._oCsvDialog) {
@@ -895,7 +903,6 @@ sap.ui.define([
             this._oCsvDialog.close();
             this._sCsvContent = null;
         },
-
 
         _i18n: function (sKey, aArgs) {
             const sText = this.getOwnerComponent().getModel("i18n").getProperty(sKey);

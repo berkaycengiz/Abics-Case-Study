@@ -23,6 +23,12 @@
                         placeholder="{i18n>search}"
                         liveChange=".onSearch"/>
                     <Button
+                        id="supplierFilterBtn"
+                        icon="sap-icon://filter"
+                        type="Transparent"
+                        tooltip="{i18n>filter}"
+                        press=".onOpenFilterDialog"/>
+                    <Button
                         id="supplierAddRowBtn"
                         text="{i18n>create}"
                         type="Emphasized"
@@ -39,11 +45,32 @@
                         text="{i18n>csvUpload}"
                         icon="sap-icon://upload"
                         press=".onOpenCsvDialog"/>
+                    <Button
+                        id="supplierDownloadBtn"
+                        icon="sap-icon://download"
+                        type="Transparent"
+                        tooltip="{i18n>download}"
+                        press=".onDownloadCsv"/>
                 </contentRight>
             </Bar>
         </customHeader>
 
         <content>
+            <OverflowToolbar 
+                id="supplierActiveFiltersBar" 
+                visible="{suppliers>/hasActiveFilters}" 
+                class="sapUiSmallPadding">
+                
+                <content>
+                    <Label text="{i18n>activeFilters}:" class="sapUiTinyMarginBegin"/>
+                    <HBox id="supplierFilterTokens" gap="0.5rem" wrap="Wrap" alignItems="Center" class="sapUiTinyMarginBegin"/>
+                    <Button
+                        text="{i18n>clearAllFilters}"
+                        type="Emphasized"
+                        press=".onClearAllFilters"
+                        class="sapUiSmallMarginEnd"/>
+                </content>
+            </OverflowToolbar>
             <Table
                 id="supplierTable"
                 items="{
@@ -124,7 +151,8 @@
                                 <Input
                                     value="{email}"
                                     visible="{parts: [{path: 'ID', targetType: 'any'}, {path: 'suppliers>/editingRows', targetType: 'any'}], formatter: '.isRowEditable'}"
-                                    type="Email"/>
+                                    type="Email"
+                                    valueStateText="{i18n>fieldRequired}"/>
                             </VBox>
 
                             <!-- Phone -->

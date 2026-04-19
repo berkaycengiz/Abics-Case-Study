@@ -1,5 +1,13 @@
-sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/core/routing/History"], function (Controller, UIComponent, History) {
+sap.ui.define([
+	"sap/ui/core/mvc/Controller", 
+	"sap/ui/core/UIComponent", 
+	"sap/ui/core/routing/History",
+	"sap/ui/export/Spreadsheet",
+	"sap/ui/export/library"
+], function (Controller, UIComponent, History, Spreadsheet, exportLibrary) {
 	"use strict";
+
+	const EdmType = exportLibrary.EdmType;
 
 	return Controller.extend("com.abics.casestudy.controller.BaseController", {
 		getRouter: function () {
@@ -31,6 +39,21 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
 			} else {
 				this.getRouter().navTo("main", {}, undefined, true);
 			}
+		},
+
+		_exportTable: function (oTable, aColumns, sFileName) {
+			const oBinding = oTable.getBinding("items");
+			const oSettings = {
+				workbook: { columns: aColumns },
+				dataSource: oBinding,
+				fileName: sFileName + ".xlsx",
+				worker: false
+			};
+
+			const oSheet = new Spreadsheet(oSettings);
+			oSheet.build().finally(function () {
+				oSheet.destroy();
+			});
 		}
 	});
 });

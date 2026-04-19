@@ -4,6 +4,7 @@ using sap from '@sap/cds/common';
 service ProductService {
     entity Products as projection on db_schema.Products;
     entity Suppliers as projection on db_schema.Suppliers;
+    
     @readonly
     entity Currencies as projection on sap.common.Currencies;
 

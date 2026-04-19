@@ -14,8 +14,8 @@
                 <Label text="{i18n>colName}" required="true"/>
                 <Input id="supplierEditName" value="{editModel>/name}" valueStateText="{i18n>fieldRequired}"/>
 
-                <Label text="{i18n>supplierEmail}"/>
-                <Input id="supplierEditEmail" value="{editModel>/email}" type="Email"/>
+                <Label text="{i18n>supplierEmail}" required="true"/>
+                <Input id="supplierEditEmail" value="{editModel>/email}" type="Email" valueStateText="{i18n>fieldRequired}"/>
 
                 <Label text="{i18n>supplierPhone}"/>
                 <Input id="supplierEditPhone" value="{editModel>/phone}" type="Text" liveChange=".onFieldChange"/>

@@ -1,0 +1,32 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Dialog
+        id="supplierFilterDialog"
+        title="{i18n>filterSuppliers}"
+        contentWidth="28rem"
+        resizable="true"
+        draggable="true">
+        <content>
+            <VBox class="sapUiContentPadding sapUiMediumMarginBeginEnd">
+                
+                <Label text="{i18n>supplierCountry}" class="sapUiSmallMarginTop"/>
+                <ComboBox id="supplierCountryFilter" width="100%" class="sapUiSmallMarginBottom" items="{ path: 'suppliers>/countries', templateShareable: false }">
+                    <items>
+                        <core:Item key="{suppliers>code}" text="{suppliers>name} - {suppliers>code}"/>
+                    </items>
+                </ComboBox>
+
+                <Label text="{i18n>supplierCity}" class=""/>
+                <Input id="supplierCityFilter" placeholder="{i18n>searchByCity}" width="100%" class="sapUiSmallMarginBottom"/>
+
+            </VBox>
+        </content>
+        <buttons>
+            <Button text="{i18n>apply}" type="Emphasized" press=".onConfirmFilter" />
+            <Button text="{i18n>cancel}" press=".onCloseFilterDialog" />
+        </buttons>
+    </Dialog>
+
+</core:FragmentDefinition>

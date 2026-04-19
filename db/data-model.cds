@@ -15,7 +15,7 @@ entity Suppliers : cuid, managed {
     name: String(100) @mandatory;
     city: String(100);
     country: Country @mandatory;
-    email: String(255) @assert.format: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+    email: String(255) @mandatory @assert.format: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
     address: String(250);
     phone: String(50);
     products: Association to many Products on products.supplier = $self;

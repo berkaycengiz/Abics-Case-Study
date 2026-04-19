@@ -9,20 +9,72 @@ sap.ui.define([
 		onInit: function () {
 			this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
 
-			var oAppModel = new JSONModel({ selectedKey: "home" });
+			const sSavedTheme = localStorage.getItem("appTheme") || "sap_horizon";
+			const bIsDark = sSavedTheme === "sap_horizon_dark";
+			sap.ui.getCore().applyTheme(sSavedTheme);
+
+			const sSavedLang = localStorage.getItem("appLanguage");
+			if (sSavedLang) {
+				sap.ui.getCore().getConfiguration().setLanguage(sSavedLang);
+			}
+
+			var oAppModel = new JSONModel({ 
+				selectedKey: "home",
+				isDark: bIsDark
+			});
 			this.getView().setModel(oAppModel, "app");
 
 			var oRouter = this.getOwnerComponent().getRouter();
 			oRouter.attachRouteMatched(this._onRouteMatched, this);
 		},
 
+		onThemeToggle: function () {
+			const oModel = this.getView().getModel("app");
+			const bIsDark = oModel.getProperty("/isDark");
+			const sNewTheme = bIsDark ? "sap_horizon" : "sap_horizon_dark";
+
+			sap.ui.getCore().applyTheme(sNewTheme);
+			localStorage.setItem("appTheme", sNewTheme);
+			oModel.setProperty("/isDark", !bIsDark);
+		},
+
+        onLanguageToggle: function (oEvent) {
+            const oButton = oEvent.getSource();
+            if (!this._oLanguageSheet) {
+                this._oLanguageSheet = new sap.m.ActionSheet({
+                    title: "{i18n>switchLanguage}",
+                    showCancelButton: true,
+                    buttons: [
+                        new sap.m.Button({
+                            text: "{i18n>languageEN}",
+                            icon: "sap-icon://flag",
+                            press: function () { this._setLanguage("en"); }.bind(this)
+                        }),
+                        new sap.m.Button({
+                            text: "{i18n>languageTR}",
+                            icon: "sap-icon://flag",
+                            press: function () { this._setLanguage("tr"); }.bind(this)
+                        }),
+                        new sap.m.Button({
+                            text: "{i18n>languageDE}",
+                            icon: "sap-icon://flag",
+                            press: function () { this._setLanguage("de"); }.bind(this)
+                        })
+                    ]
+                });
+                this.getView().addDependent(this._oLanguageSheet);
+            }
+            this._oLanguageSheet.openBy(oButton);
+        },
+
+        _setLanguage: function (sLang) {
+            sap.ui.getCore().getConfiguration().setLanguage(sLang);
+            localStorage.setItem("appLanguage", sLang);
+        },
+
 		_onRouteMatched: function (oEvent) {
 			var sRouteName = oEvent.getParameter("name");
 			var sKey = sRouteName;
-
-			if (sRouteName === "productsDetail") {
-				sKey = "products";
-			}
 
 			this.getView().getModel("app").setProperty("/selectedKey", sKey);
 		},
