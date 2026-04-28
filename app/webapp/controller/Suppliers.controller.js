@@ -803,7 +803,11 @@ sap.ui.define([
         },
 
         onCsvDialogClose: function () {
-            this._oCsvDialog.close();
+            if (this._oCsvDialog) {
+                this._oCsvDialog.close();
+                this._oCsvDialog.destroy();
+                this._oCsvDialog = null;
+            }
             this._sCsvContent = null;
         },
 

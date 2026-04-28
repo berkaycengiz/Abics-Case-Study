@@ -13,6 +13,7 @@ module.exports = cds.service.impl(async function (srv) {
             }
 
             const lines = csvContent.split(/\r?\n/).filter(l => l.trim() !== "");
+            
             if (lines.length < 2) {
                 return { valid: false, errors: [{ row: 0, column: "", message: "CSV must have a header and at least one row." }] };
             }
@@ -26,7 +27,9 @@ module.exports = cds.service.impl(async function (srv) {
                 }
             }
 
-            if (errors.length > 0) return { valid: false, errors };
+            if (errors.length > 0) {
+                return { valid: false, errors };
+            }
 
             const aSuppliers = await SELECT.from(Suppliers).columns("ID");
             const validSupplierIDs = new Set(aSuppliers.map(s => s.ID));
@@ -41,13 +44,16 @@ module.exports = cds.service.impl(async function (srv) {
 
             for (let i = 1; i < lines.length; i++) {
                 const rowNum = i + 1;
-                const cols = lines[i].split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+                const currentLine = lines[i];
+                if (!currentLine || currentLine.trim() === "") continue;
 
-                const name = nameIdx >= 0 ? cols[nameIdx] : null;
-                const price = priceIdx >= 0 ? cols[priceIdx] : null;
-                const currency = currencyIdx >= 0 ? cols[currencyIdx] : null;
-                const supplierID = supplierIdx >= 0 ? cols[supplierIdx] : null;
-                const stocks = stocksIdx >= 0 ? cols[stocksIdx] : null;
+                const cols = currentLine.split(",").map(c => c ? c.trim().replace(/^"|"$/g, "") : "");
+
+                const name = (nameIdx >= 0 && cols[nameIdx]) ? cols[nameIdx] : null;
+                const price = (priceIdx >= 0 && cols[priceIdx]) ? cols[priceIdx] : null;
+                const currency = (currencyIdx >= 0 && cols[currencyIdx]) ? cols[currencyIdx] : null;
+                const supplierID = (supplierIdx >= 0 && cols[supplierIdx]) ? cols[supplierIdx] : null;
+                const stocks = (stocksIdx >= 0 && cols[stocksIdx]) ? cols[stocksIdx] : null;
 
                 if (!name) errors.push({ row: rowNum, column: "name", message: "Name is required." });
 
@@ -94,20 +100,20 @@ module.exports = cds.service.impl(async function (srv) {
             supp: header.indexOf("supplier_id")
         };
 
-        const toInsert = lines.slice(1).map(line => {
-            const cols = line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
-            return {
-                ID: cds.utils.uuid(),
-                name: indices.name >= 0 ? cols[indices.name] : "",
-                description: indices.desc >= 0 ? cols[indices.desc] : "",
-                price: indices.price >= 0 && cols[indices.price] ? parseFloat(cols[indices.price]) : 0,
-                currency_code: indices.curr >= 0 ? cols[indices.curr] : "",
-                stocks: indices.stock >= 0 ? parseInt(cols[indices.stock]) || 0 : 0,
-                supplier_ID: indices.supp >= 0 ? cols[indices.supp] : null
-            };
-        });
-
         try {
+            const toInsert = lines.slice(1).map(line => {
+                const cols = line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+                return {
+                    ID: cds.utils.uuid(),
+                    name: (indices.name >= 0 && cols[indices.name]) ? cols[indices.name] : "",
+                    description: (indices.desc >= 0 && cols[indices.desc]) ? cols[indices.desc] : "",
+                    price: (indices.price >= 0 && cols[indices.price]) ? parseFloat(cols[indices.price]) : 0,
+                    currency_code: (indices.curr >= 0 && cols[indices.curr]) ? cols[indices.curr] : "",
+                    stocks: (indices.stock >= 0 && cols[indices.stock]) ? parseInt(cols[indices.stock]) || 0 : 0,
+                    supplier_ID: (indices.supp >= 0 && cols[indices.supp]) ? cols[indices.supp] : null
+                };
+            });
+
             if (toInsert.length > 0) await INSERT.into(Products).entries(toInsert);
             return { created: toInsert.length, errors: 0 };
         } catch (err) {
@@ -160,23 +166,24 @@ module.exports = cds.service.impl(async function (srv) {
             country: header.indexOf("country_code") >= 0 ? header.indexOf("country_code") : header.indexOf("country")
         };
 
-        const toInsert = lines.slice(1).map(line => {
-            const cols = line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
-            return {
-                ID: cds.utils.uuid(),
-                name: indices.name >= 0 ? cols[indices.name] : "",
-                email: indices.email >= 0 ? cols[indices.email] : null,
-                phone: indices.phone >= 0 ? cols[indices.phone] : null,
-                address: indices.address >= 0 ? cols[indices.address] : null,
-                city: indices.city >= 0 ? cols[indices.city] : null,
-                country_code: indices.country >= 0 ? cols[indices.country].substring(0, 3) : null
-            };
-        });
-
         try {
+            const toInsert = lines.slice(1).map(line => {
+                const cols = line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+                return {
+                    ID: cds.utils.uuid(),
+                    name: (indices.name >= 0 && cols[indices.name]) ? cols[indices.name] : "",
+                    email: (indices.email >= 0 && cols[indices.email]) ? cols[indices.email] : null,
+                    phone: (indices.phone >= 0 && cols[indices.phone]) ? cols[indices.phone] : null,
+                    address: (indices.address >= 0 && cols[indices.address]) ? cols[indices.address] : null,
+                    city: (indices.city >= 0 && cols[indices.city]) ? cols[indices.city] : null,
+                    country_code: (indices.country >= 0 && cols[indices.country]) ? cols[indices.country].substring(0, 3) : null
+                };
+            });
+
             await INSERT.into(Suppliers).entries(toInsert);
             return { created: toInsert.length };
         } catch (err) {
+            console.error("Upload Suppliers CSV Error:", err);
             return req.error(400, "Upload failed: " + err.message);
         }
     });

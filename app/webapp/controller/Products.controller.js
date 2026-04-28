@@ -640,6 +640,7 @@ sap.ui.define([
             }
         },
 
+        ///////////////////////////
         onSave: function () {
             if (!this._validateAll()) {
                 MessageBox.error(this._i18n("validationError"));
@@ -737,6 +738,7 @@ sap.ui.define([
             return bValid;
         },
 
+        //////////////////////////////////////////
         onCancel: function () {
             const bHasChanges = this._oODataModel.hasPendingChanges("productsGroup");
             if (!bHasChanges) {
@@ -826,15 +828,22 @@ sap.ui.define([
         },
 
         onValidateCsv: function () {
-            if (!this._sCsvContent) return;
+            if (!this._sCsvContent || this._bIsValidating) return;
 
-            const oAction = this._oODataModel.bindContext("/validateProductsCsv(...)");
+            this._bIsValidating = true;
+            const oUploadBtn = this.byId("productUploadCsvBtn");
+            if (oUploadBtn) oUploadBtn.setEnabled(false);
+
+            // Use '$direct' to bypass batching for large CSV strings
+            const oAction = this._oODataModel.bindContext("/validateProductsCsv(...)", null, { $$groupId: "$direct" });
             oAction.setParameter("csvContent", this._sCsvContent);
 
             oAction.execute().then(() => {
+                this._bIsValidating = false;
                 const oResult = oAction.getBoundContext().getObject();
                 this._showCsvValidationResult(oResult, this._sCsvFileName);
             }).catch((oErr) => {
+                this._bIsValidating = false;
                 MessageBox.error(this._i18n("csvValidationFailed", [oErr.message || oErr]));
             });
         },
@@ -900,7 +909,11 @@ sap.ui.define([
         },
 
         onCsvDialogClose: function () {
-            this._oCsvDialog.close();
+            if (this._oCsvDialog) {
+                this._oCsvDialog.close();
+                this._oCsvDialog.destroy();
+                this._oCsvDialog = null;
+            }
             this._sCsvContent = null;
         },
 
