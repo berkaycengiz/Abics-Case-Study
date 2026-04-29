@@ -115,7 +115,7 @@ module.exports = cds.service.impl(async function (srv) {
             });
 
             if (toInsert.length > 0) await INSERT.into(Products).entries(toInsert);
-            return { created: toInsert.length, errors: 0 };
+            return { created: toInsert.length };
         } catch (err) {
             return req.error(400, "Upload failed: " + err.message);
         }

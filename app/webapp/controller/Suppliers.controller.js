@@ -793,8 +793,13 @@ sap.ui.define([
             oAction.setParameter("csvContent", this._sCsvContent);
 
             oAction.execute().then(() => {
-                sap.m.MessageToast.show(this._i18n("csvUploadSuccess"));
-                this._oCsvDialog.close();
+                const oResult = oAction.getBoundContext().getObject();
+                const iCreated = oResult ? oResult.created : 0;
+                const sMsg = this._i18n("csvUploadRowsAdded", [iCreated]);
+                
+                sap.m.MessageToast.show(sMsg);
+
+                this.onCsvDialogClose();
                 this._getBinding().refresh();
                 this._sCsvContent = null;
             }).catch((oErr) => {

@@ -21,11 +21,7 @@ service ProductService {
         };
     };
 
-    action uploadProductsCsv(csvContent: LargeString) returns {
-        created : Integer;
-        updated : Integer;
-        errors  : Integer;
-    };
+    action uploadProductsCsv(csvContent: LargeString) returns { created: Integer };
 
     action validateSuppliersCsv(csvContent: LargeString) returns {
         valid   : Boolean;
@@ -36,9 +32,5 @@ service ProductService {
         };
     };
 
-    action uploadSuppliersCsv(csvContent: LargeString) returns {
-        created : Integer;
-        updated : Integer;
-        errors  : Integer;
-    };
+    action uploadSuppliersCsv(csvContent: LargeString) returns { created: Integer };
 }
